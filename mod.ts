@@ -1,6 +1,17 @@
 import { argifyPrePostArgs, argifyTsconfig } from "./lib/args.ts";
-import { argifyPermissions, Permissions } from "./lib/permissions.ts";
+import { argifyPermissions } from "./lib/permissions.ts";
 import { defaultEmptyObject, toArgsStringList } from "./lib/utils.ts";
+
+export interface Permissions {
+  allowAll?: boolean;
+  allowEnv?: boolean;
+  allowHRTime?: boolean;
+  allowNet?: boolean | string;
+  allowPlugin?: boolean;
+  allowRead?: boolean | string;
+  allowRun?: boolean;
+  allowWrite?: boolean | string;
+}
 
 export interface ArgsConfig {
   /**
@@ -50,7 +61,7 @@ export async function Scripts(
   /**
    * Global configuration added to every script
    */
-  globalConfig: GlobalConfig = defaultEmptyObject,
+  globalConfig: GlobalConfig = defaultEmptyObject
 ): Promise<Deno.Process | null> {
   {
     const [scriptArg, ...restArg] = Deno.args;

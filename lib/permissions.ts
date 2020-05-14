@@ -1,19 +1,10 @@
 import { defaultEmptyArray, defaultEmptyObject } from "./utils.ts";
 
-export interface Permissions {
-  allowAll?: boolean;
-  allowEnv?: boolean;
-  allowHRTime?: boolean;
-  allowNet?: boolean | string;
-  allowPlugin?: boolean;
-  allowRead?: boolean | string;
-  allowRun?: boolean;
-  allowWrite?: boolean | string;
-}
+import type { Permissions } from "../mod.ts";
 
 export function argifyPermissions(
   localPermissions: Permissions = defaultEmptyObject,
-  globalPermissions: Permissions = defaultEmptyObject,
+  globalPermissions: Permissions = defaultEmptyObject
 ): string[] {
   if (
     localPermissions === defaultEmptyObject &&
@@ -77,6 +68,6 @@ export function argifyPermissions(
       }
       return argsPermissions;
     },
-    [] as string[],
+    [] as string[]
   );
 }

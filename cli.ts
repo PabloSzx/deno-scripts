@@ -19,9 +19,20 @@ switch (cmd.toLowerCase()) {
           bar: {
             file: "./mod.ts",
           },
-        });`,
+        });`
       );
+
+      await Deno.run({
+        cmd: ["deno", "cache", "-r", "./scripts.ts"],
+      }).status();
+
+      await Deno.run({
+        cmd: ["deno", "fmt", "./scripts.ts"],
+      }).status();
+
+      console.log("\nscripts.ts file created.");
     }
+
     break;
   }
   default: {
@@ -34,7 +45,7 @@ async function readScriptsFile() {
 
   if (scriptsTSExists) {
     await Deno.run({
-      cmd: ["deno", "run", "-A", "./scripts.ts", ...Deno.args],
+      cmd: ["deno", "run", "--allow-run", "./scripts.ts", ...Deno.args],
     }).status();
   } else {
     console.error("scripts.ts file not found!");

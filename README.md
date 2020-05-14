@@ -2,10 +2,8 @@
 
 ## Install
 
-> In order for this library to help you handle all the permissions through the configuration file you will need to explicitly add the `-A`
-
 ```sh
-deno install -A https://denopkg.com/PabloSzx/deno-scripts/cli.ts
+deno install --allow-run --allow-read --allow-write https://denopkg.com/PabloSzx/deno-scripts/cli.ts
 ```
 
 ## Usage
@@ -34,6 +32,16 @@ Scripts({
 ```
 
 As you could see, there are two different type of scripts, one is `file`, and the other is `run`.
+
+Then you can simply use it
+
+```sh
+deno-scripts foo
+## or
+deno-scripts bar
+## or
+deno run --allow-run scripts.ts foo
+```
 
 ### file
 
@@ -158,3 +166,4 @@ interface GlobalConfig {
 ## Coming soon
 
 - [ ] [denon](https://github.com/eliassjogreen/denon) support
+- [ ] Environment variables support
