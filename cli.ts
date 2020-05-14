@@ -27,7 +27,7 @@ switch (cmd.toLowerCase()) {
       }).status();
 
       await Deno.run({
-        cmd: ["deno", "fmt", "./scripts.ts"],
+        cmd: ["deno", "fmt", "-q", "./scripts.ts"],
       }).status();
 
       console.log("\nscripts.ts file created.");
