@@ -11,9 +11,10 @@ Scripts(
     },
   },
   {
+    envFile: false,
     permissions: {
+      allowRead: true,
       allowRun: true,
     },
-    preArgs: "",
   }
 );

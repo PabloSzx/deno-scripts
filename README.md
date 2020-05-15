@@ -14,8 +14,8 @@ deno install -f -n dsc --allow-run --allow-read --allow-write https://deno.land/
 
 - [x] Type-safety
 - [x] Permissions management
+- [x] Environment variables support (from `.env` or from _config_)
 - [ ] [denon](https://github.com/eliassjogreen/denon) support (coming soon)
-- [ ] Environment variables support (coming soon)
 
 ## Usage
 
@@ -54,11 +54,13 @@ dsc bar
 deno run --allow-run scripts.ts foo
 ```
 
-### file
+### File script configuration
 
 It will run the specified file as `deno run ...`
 
 You can specify the configuration as it follows:
+
+> | **Remember** | The **local** configuration will always have a priority over **global** configuration
 
 ```ts
 interface ScriptFile {
@@ -67,13 +69,25 @@ interface ScriptFile {
    */
   file: string;
   /**
-   * Arguments to be added **before** the script itself.
+   * Load environment variables from a file
+   *
+   * If it's `true` it will look for ".env"
+   *
+   * By default it's set to `true` if a `.env` exists.
    */
-  preArgs?: string | string[];
+  envFile?: boolean | string;
   /**
-   * Arguments to be added **after** the script itself.
+   * Add environment variables
    */
-  postArgs?: string | string[];
+  env?: Record<string, string | number | boolean>;
+  /**
+   * Arguments to be added to the script
+   */
+  args?: string | string[];
+  /**
+   * Deno args to be added
+   */
+  denoArgs?: string | string[];
   /**
    * Permissions management
    */
@@ -94,11 +108,13 @@ interface ScriptFile {
 }
 ```
 
-### run
+### Run script configuration
 
 It will run the specified command **as it is**.
 
 You can specify the configuration as it follows:
+
+> | **Remember** | The **local** configuration will always have a priority over **global** configuration
 
 ```ts
 interface ScriptRun {
@@ -107,19 +123,29 @@ interface ScriptRun {
    */
   run: string | string[];
   /**
-   * Arguments to be added **before** the script itself.
+   * Load environment variables from a file
+   *
+   * If it's `true` it will look for ".env"
+   *
+   * By default it's set to `true` if a `.env` exists.
    */
-  preArgs?: string | string[];
+  envFile?: boolean | string;
   /**
-   * Arguments to be added **after** the script itself.
+   * Add environment variables
    */
-  postArgs?: string | string[];
+  env?: Record<string, string | number | boolean>;
+  /**
+   * Arguments to be added after the script
+   */
+  args?: string | string[];
 }
 ```
 
-### Global Config
+### Global configuration
 
 You can also specify a second options object to the `Scripts` constructor.
+
+> | **Remember** | The **local** configuration will always have a priority over **global** configuration
 
 ```ts
 Scripts(
@@ -164,12 +190,29 @@ interface GlobalConfig {
    */
   tsconfig?: string;
   /**
-   * Arguments to be added **before** the script itself.
+   * Deno args to be added
    */
-  preArgs?: string | string[];
+  denoArgs?: string | string[];
   /**
-   * Arguments to be added **after** the script itself.
+   * Load environment variables from a file
+   *
+   * If it's `true` it will look for ".env"
+   *
+   * By default it's set to `true` if a `.env` exists.
    */
-  postArgs?: string | string[];
+  envFile?: boolean | string;
+  /**
+   * Add environment variables
+   */
+  env?: Record<string, string | number | boolean>;
+  /**
+   * Arguments to be added after the script
+   */
+  args?: string | string[];
+  /**
+   * If `debug` is enabled, it will print the command
+   * that is going to be executed.
+   */
+  debug?: boolean;
 }
 ```

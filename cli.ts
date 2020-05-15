@@ -1,10 +1,10 @@
-import { fileExists } from "./lib/utils.ts";
+import { exists, existsSync } from "./deps.ts";
 
 const [cmd = ""] = Deno.args;
 
 switch (cmd.toLowerCase()) {
   case "init": {
-    const scriptsTSExists = await fileExists("./scripts.ts");
+    const scriptsTSExists = existsSync("./scripts.ts");
     if (scriptsTSExists) {
       console.log("scripts.ts file already exists.");
     } else {
@@ -41,11 +41,13 @@ switch (cmd.toLowerCase()) {
 }
 
 async function readScriptsFile() {
-  const scriptsTSExists = await fileExists("./scripts.ts");
+  const scriptsTSExists = await exists("./scripts.ts");
 
   if (scriptsTSExists) {
+    const cmd = ["deno", "run", "-A", "./scripts.ts", ...Deno.args];
+
     await Deno.run({
-      cmd: ["deno", "run", "--allow-run", "./scripts.ts", ...Deno.args],
+      cmd,
     }).status();
   } else {
     console.error("scripts.ts file not found!");

@@ -1,6 +1,8 @@
 import { argifyPrePostArgs, argifyTsconfig } from "./lib/args.ts";
 import { argifyPermissions } from "./lib/permissions.ts";
 import { defaultEmptyObject, toArgsStringList } from "./lib/utils.ts";
+import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
+import { existsSync } from "./deps.ts";
 
 export interface Permissions {
   allowAll?: boolean;
@@ -13,18 +15,26 @@ export interface Permissions {
   allowWrite?: boolean | string;
 }
 
-export interface ArgsConfig {
+export interface CommonArgs {
   /**
-   * Arguments to be added **before** the script itself.
+   * Load environment variables from a file
+   *
+   * If it's `true` it will look for ".env"
+   *
+   * By default it's set to `true` if a `.env` exists.
    */
-  preArgs?: string | string[];
+  envFile?: boolean | string;
   /**
-   * Arguments to be added **after** the script itself.
+   * Add environment variables
    */
-  postArgs?: string | string[];
+  env?: Record<string, string | number | boolean>;
+  /**
+   * Arguments to be added after the script
+   */
+  args?: string | string[];
 }
 
-export interface CommonConfig extends ArgsConfig {
+export interface CommonDenoConfig extends CommonArgs {
   /**
    * Permissions management
    */
@@ -33,11 +43,21 @@ export interface CommonConfig extends ArgsConfig {
    * tsconfig location
    */
   tsconfig?: string;
+  /**
+   * Deno args to be added
+   */
+  denoArgs?: string | string[];
 }
 
-export interface GlobalConfig extends CommonConfig {}
+export interface GlobalConfig extends CommonDenoConfig {
+  /**
+   * If `debug` is enabled, it will print the command
+   * that is going to be executed.
+   */
+  debug?: boolean;
+}
 
-export interface ScriptFile extends CommonConfig {
+export interface ScriptFile extends CommonDenoConfig {
   /**
    * File to be executed with "deno run ..."
    */
@@ -45,12 +65,25 @@ export interface ScriptFile extends CommonConfig {
   run?: undefined;
 }
 
-export interface ScriptRun extends ArgsConfig {
+export interface ScriptRun extends CommonArgs {
   file?: undefined;
   /**
    * Command to be executed
    */
   run: string | string[];
+}
+
+function defaultCommonArgs<
+  LocalConfig extends CommonArgs,
+  GlobalConfig extends CommonArgs
+>(_local: LocalConfig, global: GlobalConfig) {
+  // If envFile is not specified, it will check if a `.env` exists
+  // And if it does, it will turn it `true`
+  if (global.envFile === undefined) {
+    if (existsSync(".env")) {
+      global.envFile = true;
+    }
+  }
 }
 
 /**
@@ -78,34 +111,75 @@ export async function Scripts(
       return null;
     }
 
+    defaultCommonArgs(script, globalConfig);
+
+    const envFile = script.envFile ?? globalConfig.envFile;
+
+    let env: Record<string, string> | undefined;
+
+    if (envFile) {
+      env = await loadEnvFromFile(
+        typeof envFile === "string" ? envFile : ".env"
+      );
+    }
+
+    if (globalConfig.env) {
+      env = {
+        ...(env || defaultEmptyObject),
+        ...loadEnvFromObject(globalConfig.env),
+      };
+    }
+
+    if (script.env) {
+      env = {
+        ...(env || defaultEmptyObject),
+        ...loadEnvFromObject(script.env),
+      };
+    }
+
     if (script.file) {
+      const cmd = [
+        "deno",
+        "run",
+        ...argifyPermissions(script.permissions, globalConfig.permissions),
+        ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
+        ...argifyPrePostArgs(script.denoArgs, globalConfig.denoArgs),
+        script.file,
+        ...argifyPrePostArgs(script.args, globalConfig.args),
+        ...restArg,
+      ];
+      if (globalConfig.debug) {
+        console.log({
+          cmd: cmd.join(" "),
+          env,
+        });
+      }
       const process = Deno.run({
-        cmd: [
-          "deno",
-          "run",
-          ...argifyPermissions(script.permissions, globalConfig.permissions),
-          ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
-          ...argifyPrePostArgs(script.preArgs, globalConfig.preArgs),
-          script.file,
-          ...argifyPrePostArgs(script.postArgs, globalConfig.postArgs),
-          ...restArg,
-        ],
+        cmd,
         stdout: "inherit",
         stderr: "inherit",
         stdin: "inherit",
+        env,
       });
 
       await process.status();
 
       return process;
     } else if (script.run) {
+      const cmd = [
+        ...toArgsStringList(script.run),
+        ...argifyPrePostArgs(script.args, globalConfig.args),
+        ...restArg,
+      ];
+      if (globalConfig.debug) {
+        console.log({
+          cmd: cmd.join(" "),
+          env,
+        });
+      }
       const process = Deno.run({
-        cmd: [
-          ...argifyPrePostArgs(script.preArgs, globalConfig.preArgs),
-          ...toArgsStringList(script.run),
-          ...argifyPrePostArgs(script.postArgs, globalConfig.postArgs),
-          ...restArg,
-        ],
+        cmd,
+        env,
       });
 
       await process.status();
