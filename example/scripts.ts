@@ -1,4 +1,4 @@
-import { Scripts } from "https://denopkg.com/PabloSzx/deno_scripts";
+import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
 
 Scripts(
   {

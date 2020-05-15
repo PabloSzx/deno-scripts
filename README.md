@@ -4,9 +4,18 @@ Type-safe centralized Deno project scripts 🦕
 
 ## Install
 
+> You can change `dsc` to any name you prefer calling it
+
 ```sh
-deno install --allow-run --allow-read --allow-write https://denopkg.com/PabloSzx/deno_scripts/cli.ts
+deno install -f -n dsc --allow-run --allow-read --allow-write https://deno.land/x/deno_scripts/cli.ts
 ```
+
+## Features
+
+- [x] Type-safety
+- [x] Permissions management
+- [ ] [denon](https://github.com/eliassjogreen/denon) support (coming soon)
+- [ ] Environment variables support (coming soon)
 
 ## Usage
 
@@ -15,13 +24,13 @@ First, you should init the configuration file, you can simply execute
 > In the root of your project
 
 ```sh
-deno_scripts init
+dsc init
 ```
 
 It will generate a `scripts.ts` file like so
 
 ```ts
-import { Scripts } from "https://denopkg.com/PabloSzx/deno_scripts";
+import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
 
 Scripts({
   foo: {
@@ -38,10 +47,10 @@ As you could see, there are two different type of scripts, one is `file`, and th
 Then you can simply use it
 
 ```sh
-deno_scripts foo
+dsc foo
 ## or
-deno_scripts bar
-## or
+dsc bar
+## or you can simply call it using deno itself
 deno run --allow-run scripts.ts foo
 ```
 
@@ -164,8 +173,3 @@ interface GlobalConfig {
   postArgs?: string | string[];
 }
 ```
-
-## Coming soon
-
-- [ ] [denon](https://github.com/eliassjogreen/denon) support
-- [ ] Adding environment variables
