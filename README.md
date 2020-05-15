@@ -1,9 +1,11 @@
-# deno-scripts
+# deno_scripts
+
+Type-safe centralized Deno project scripts 🦕
 
 ## Install
 
 ```sh
-deno install --allow-run --allow-read --allow-write https://denopkg.com/PabloSzx/deno-scripts/cli.ts
+deno install --allow-run --allow-read --allow-write https://denopkg.com/PabloSzx/deno_scripts/cli.ts
 ```
 
 ## Usage
@@ -13,13 +15,13 @@ First, you should init the configuration file, you can simply execute
 > In the root of your project
 
 ```sh
-deno-scripts init
+deno_scripts init
 ```
 
 It will generate a `scripts.ts` file like so
 
 ```ts
-import { Scripts } from "https://denopkg.com/PabloSzx/deno-scripts";
+import { Scripts } from "https://denopkg.com/PabloSzx/deno_scripts";
 
 Scripts({
   foo: {
@@ -36,9 +38,9 @@ As you could see, there are two different type of scripts, one is `file`, and th
 Then you can simply use it
 
 ```sh
-deno-scripts foo
+deno_scripts foo
 ## or
-deno-scripts bar
+deno_scripts bar
 ## or
 deno run --allow-run scripts.ts foo
 ```
@@ -166,4 +168,4 @@ interface GlobalConfig {
 ## Coming soon
 
 - [ ] [denon](https://github.com/eliassjogreen/denon) support
-- [ ] Environment variables support
+- [ ] Adding environment variables

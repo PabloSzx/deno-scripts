@@ -1,4 +1,4 @@
-import { Scripts } from "https://denopkg.com/PabloSzx/deno-scripts";
+import { Scripts } from "https://denopkg.com/PabloSzx/deno_scripts";
 
 Scripts(
   {
@@ -15,5 +15,5 @@ Scripts(
       allowRun: true,
     },
     preArgs: "",
-  },
+  }
 );

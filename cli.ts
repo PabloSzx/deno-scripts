@@ -10,7 +10,7 @@ switch (cmd.toLowerCase()) {
     } else {
       Deno.writeTextFileSync(
         "./scripts.ts",
-        `import { Scripts } from "https://denopkg.com/PabloSzx/deno-scripts";
+        `import { Scripts } from "https://denopkg.com/PabloSzx/deno_scripts";
         
         Scripts({
           foo: {

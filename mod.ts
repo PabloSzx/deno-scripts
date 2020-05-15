@@ -54,7 +54,7 @@ export interface ScriptRun extends ArgsConfig {
 }
 
 /**
- * **deno-scripts** configuration constructor
+ * **deno_scripts** configuration constructor
  */
 export async function Scripts(
   config: Record<string, ScriptFile | ScriptRun>,
