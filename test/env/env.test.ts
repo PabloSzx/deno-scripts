@@ -1,10 +1,15 @@
 import { __, assertEquals, path } from "../../dev_deps.ts";
 import { loadEnvFromFile, loadEnvFromObject } from "../../lib/env.ts";
+import { fixDirnameWindows } from "../utils.ts";
 
-const { __dirname } = __(import.meta);
+let { __dirname } = __(import.meta);
+
+__dirname = fixDirnameWindows(__dirname);
 
 Deno.test("loads env from file", async () => {
-  const envObject = await loadEnvFromFile(path.resolve(__dirname, ".env.test"));
+  const dotEnvLocation = path.join(__dirname, ".env.test");
+
+  const envObject = await loadEnvFromFile(dotEnvLocation);
 
   assertEquals(envObject, { HELLO_WORLD: "123" });
 });

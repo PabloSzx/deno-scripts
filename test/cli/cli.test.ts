@@ -6,8 +6,11 @@ import {
   assertStrictEq,
   path,
 } from "../../dev_deps.ts";
+import { fixDirnameWindows } from "../utils.ts";
 
-const { dirname } = __(import.meta);
+let { dirname } = __(import.meta);
+
+dirname = fixDirnameWindows(dirname);
 
 const CLIFileLocation = path.resolve(dirname, "../../cli.ts");
 
@@ -70,9 +73,9 @@ Deno.test("cli wrong script", async () => {
   runProcess.close();
 });
 
-Deno.test("init scripts.ts", async () => {
-  const tempFolderLocation = path.resolve(dirname, "./temp");
-  const scriptsTsLocation = path.resolve(dirname, "temp", "./scripts.ts");
+Deno.test("cli init scripts.ts", async () => {
+  const tempFolderLocation = await Deno.makeTempDir();
+  const scriptsTsLocation = path.resolve(tempFolderLocation, "./scripts.ts");
 
   await Deno.mkdir(tempFolderLocation, {
     recursive: true,
@@ -83,7 +86,7 @@ Deno.test("init scripts.ts", async () => {
   }
 
   const initProcess = Deno.run({
-    cwd: path.resolve(dirname, "temp"),
+    cwd: tempFolderLocation,
     cmd: ["deno", "run", "-A", CLIFileLocation, "init"],
     stdin: "null",
     stderr: "null",

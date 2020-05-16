@@ -16,3 +16,5 @@ export function toArgsStringList(
 
   return defaultEmptyArray;
 }
+
+export const isWindows = Deno.build.os === "windows";

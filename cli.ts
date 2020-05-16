@@ -23,7 +23,7 @@ switch (cmd.toLowerCase()) {
       );
 
       await Deno.run({
-        cmd: ["deno", "cache", "-r", "./scripts.ts"],
+        cmd: ["deno", "cache", "./scripts.ts"],
       }).status();
 
       await Deno.run({
