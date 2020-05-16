@@ -1,4 +1,4 @@
-import { existsSync, colors } from "./deps.ts";
+import { existsSync, exists } from "./deps.ts";
 import {
   argifyArgs,
   argifyImportMap,
@@ -7,7 +7,13 @@ import {
 } from "./lib/args.ts";
 import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
 import { argifyPermissions } from "./lib/permissions.ts";
-import { defaultEmptyObject, toArgsStringList } from "./lib/utils.ts";
+import {
+  defaultEmptyObject,
+  toArgsStringList,
+  defaultEmptyArray,
+} from "./lib/utils.ts";
+import { fail, debug, log } from "./log.ts";
+import Watcher from "./watcher.ts";
 
 export interface Permissions {
   allowAll?: boolean;
@@ -18,6 +24,15 @@ export interface Permissions {
   allowRead?: boolean | string;
   allowRun?: boolean;
   allowWrite?: boolean | string;
+}
+
+export interface WatchOptions {
+  paths?: string[];
+  match?: string[];
+  skip?: string[];
+  extensions?: string[];
+  interval?: number;
+  recursive?: boolean;
 }
 
 export interface CommonArgs {
@@ -37,6 +52,10 @@ export interface CommonArgs {
    * Arguments to be added after the script
    */
   args?: string | string[];
+  /**
+   * Enable watch and/or specify options
+   */
+  watch?: boolean | WatchOptions;
 }
 
 export interface CommonDenoConfig extends CommonArgs {
@@ -113,15 +132,13 @@ export async function Scripts(
     const [scriptArg, ...restArg] = Deno.args;
 
     if (!scriptArg) {
-      console.log(colors.red("Specify a script to be executed!"));
-      Deno.exit(1);
+      fail("Specify a script to be executed!");
     }
 
     const script = config[scriptArg];
 
     if (script == null) {
-      console.error(colors.red(`script "${scriptArg}" not found!`));
-      Deno.exit(1);
+      fail(`script "${scriptArg}" not found!`);
     }
 
     defaultCommonArgs(script, globalConfig);
@@ -150,34 +167,73 @@ export async function Scripts(
       };
     }
 
+    const watchModeEnabled = Boolean(script.watch ?? globalConfig.watch);
+    if (watchModeEnabled) {
+      log("Watch mode enabled.");
+    }
+    const watchOptions: WatchOptions = {
+      ...(typeof globalConfig.watch === "object"
+        ? globalConfig.watch
+        : defaultEmptyObject),
+      ...(typeof script.watch === "object" ? script.watch : defaultEmptyObject),
+    };
+
     if (script.file) {
-      const cmd = [
-        "deno",
-        "run",
-        ...argifyPermissions(script.permissions, globalConfig.permissions),
-        ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
-        ...argifyArgs(script.denoArgs, globalConfig.denoArgs),
-        ...argifyImportMap(globalConfig.importMap),
-        ...argifyUnstable(globalConfig.unstable),
-        script.file,
-        ...argifyArgs(script.args, globalConfig.args),
-        ...restArg,
-      ];
-      if (globalConfig.debug) {
-        console.log({
-          cmd: cmd.join(" "),
+      if (!(await exists(script.file))) {
+        fail(`File ${script.file} not found!`);
+      }
+      if (watchModeEnabled) {
+        const watcher = new Watcher(
+          [script.file, ...(watchOptions.paths || defaultEmptyArray)],
+          {
+            interval: watchOptions.interval,
+            recursive: watchOptions.recursive,
+            exts: watchOptions.extensions,
+            match: watchOptions.match,
+            skip: watchOptions.skip,
+          }
+        );
+
+        for await (const changes of watcher) {
+          log(
+            `Detected ${changes.length} change${
+              changes.length > 1 ? "s" : ""
+            }. Rerunning...`
+          );
+
+          for (const change of changes) {
+            debug(`File "${change.path}" was ${change.event}`);
+          }
+        }
+      } else {
+        const cmd = [
+          "deno",
+          "run",
+          ...argifyPermissions(script.permissions, globalConfig.permissions),
+          ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
+          ...argifyArgs(script.denoArgs, globalConfig.denoArgs),
+          ...argifyImportMap(globalConfig.importMap),
+          ...argifyUnstable(globalConfig.unstable),
+          script.file,
+          ...argifyArgs(script.args, globalConfig.args),
+          ...restArg,
+        ];
+        if (globalConfig.debug) {
+          debug({
+            cmd: cmd.join(" "),
+            env,
+          });
+        }
+        const process = Deno.run({
+          cmd,
+          stdout: "inherit",
+          stderr: "inherit",
+          stdin: "inherit",
           env,
         });
-      }
-      const process = Deno.run({
-        cmd,
-        stdout: "inherit",
-        stderr: "inherit",
-        stdin: "inherit",
-        env,
-      });
 
-      Deno.exit((await process.status()).code);
+        Deno.exit((await process.status()).code);
+      }
     } else if (script.run) {
       const cmd = [
         ...toArgsStringList(script.run),
@@ -185,7 +241,7 @@ export async function Scripts(
         ...restArg,
       ];
       if (globalConfig.debug) {
-        console.log({
+        debug({
           cmd: cmd.join(" "),
           env,
         });
@@ -197,8 +253,7 @@ export async function Scripts(
 
       Deno.exit((await process.status()).code);
     } else {
-      console.error(colors.red("Script not found!"));
-      Deno.exit(1);
+      fail("Script not found!");
     }
   }
 }

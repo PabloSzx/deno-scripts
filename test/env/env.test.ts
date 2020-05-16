@@ -1,6 +1,7 @@
-import { __, assertEquals, path } from "../../dev_deps.ts";
+import { __, assertEquals } from "../../dev_deps.ts";
 import { loadEnvFromFile, loadEnvFromObject } from "../../lib/env.ts";
 import { fixDirnameWindows } from "../utils.ts";
+import { path } from "../../deps.ts";
 
 let { __dirname } = __(import.meta);
 

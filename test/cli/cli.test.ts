@@ -1,10 +1,9 @@
-import { exists } from "../../deps.ts";
+import { exists, path } from "../../deps.ts";
 import {
   __,
   assert,
   assertStrContains,
   assertStrictEq,
-  path,
 } from "../../dev_deps.ts";
 import { fixDirnameWindows } from "../utils.ts";
 

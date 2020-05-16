@@ -1,4 +1,5 @@
 import { exists, existsSync } from "./deps.ts";
+import { fail, log } from "./log.ts";
 
 const [cmd = ""] = Deno.args;
 
@@ -6,7 +7,7 @@ switch (cmd.toLowerCase()) {
   case "init": {
     const scriptsTSExists = existsSync("./scripts.ts");
     if (scriptsTSExists) {
-      console.log("scripts.ts file already exists.");
+      log("scripts.ts file already exists.");
     } else {
       Deno.writeTextFileSync(
         "./scripts.ts",
@@ -30,7 +31,7 @@ switch (cmd.toLowerCase()) {
         cmd: ["deno", "fmt", "-q", "./scripts.ts"],
       }).status();
 
-      console.log("\nscripts.ts file created.");
+      log("\nscripts.ts file created.");
     }
 
     break;
@@ -50,6 +51,6 @@ async function readScriptsFile() {
       cmd,
     }).status();
   } else {
-    console.error("scripts.ts file not found!");
+    fail("scripts.ts file not found!");
   }
 }
