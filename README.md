@@ -4,10 +4,10 @@ Type-safe centralized Deno project scripts 🦕
 
 ## Install
 
-> You can change `dsc` to any name you prefer calling it
+> You can change `ds` to any name you prefer calling it
 
 ```sh
-deno install -f -n dsc --allow-run --allow-read --allow-write https://deno.land/x/deno_scripts/cli.ts
+deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x/deno_scripts/cli.ts
 ```
 
 ## Features
@@ -24,7 +24,7 @@ First, you should init the configuration file, you can simply execute
 > In the root of your project
 
 ```sh
-dsc init
+ds init
 ```
 
 It will generate a `scripts.ts` file like so
@@ -47,9 +47,9 @@ As you could see, there are two different type of scripts, one is `file`, and th
 Then you can simply use it
 
 ```sh
-dsc foo
+ds foo
 ## or
-dsc bar
+ds bar
 ## or you can simply call it using deno itself
 deno run -A scripts.ts foo
 ```
