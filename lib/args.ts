@@ -1,8 +1,8 @@
-import { toArgsStringList } from "./utils.ts";
+import { defaultEmptyArray, toArgsStringList } from "./utils.ts";
 
-export function argifyPrePostArgs(
+export function argifyArgs(
   localArgs: string | string[] | undefined,
-  globalArgs: string | string[] | undefined,
+  globalArgs: string | string[] | undefined
 ): string[] {
   const args: string[] = [];
 
@@ -19,13 +19,28 @@ export function argifyPrePostArgs(
 
 export function argifyTsconfig(
   localTsconfig: string | undefined,
-  globalTsconfig: string | undefined,
+  globalTsconfig: string | undefined
 ): string[] {
   if (localTsconfig) {
-    return [`-c=${localTsconfig}`];
+    return ["-c", localTsconfig];
   }
   if (globalTsconfig) {
-    return [`-c=${globalTsconfig}`];
+    return ["-c", globalTsconfig];
   }
-  return [];
+  return defaultEmptyArray;
+}
+
+export function argifyImportMap(path: string | undefined): string[] {
+  if (path) {
+    return ["--importmap", path];
+  }
+
+  return defaultEmptyArray;
+}
+
+export function argifyUnstable(unstable?: boolean): string[] {
+  if (unstable) {
+    return ["--unstable"];
+  }
+  return defaultEmptyArray;
 }

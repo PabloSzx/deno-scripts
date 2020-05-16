@@ -51,7 +51,7 @@ dsc foo
 ## or
 dsc bar
 ## or you can simply call it using deno itself
-deno run --allow-run scripts.ts foo
+deno run -A scripts.ts foo
 ```
 
 ### File script configuration
@@ -214,5 +214,13 @@ interface GlobalConfig {
    * that is going to be executed.
    */
   debug?: boolean;
+  /**
+   * Import map path
+   */
+  importMap?: string;
+  /**
+   * Enable unstable features
+   */
+  unstable?: boolean;
 }
 ```

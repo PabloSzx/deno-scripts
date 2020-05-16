@@ -1,8 +1,13 @@
-import { argifyPrePostArgs, argifyTsconfig } from "./lib/args.ts";
+import { existsSync, colors } from "./deps.ts";
+import {
+  argifyArgs,
+  argifyImportMap,
+  argifyTsconfig,
+  argifyUnstable,
+} from "./lib/args.ts";
+import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
 import { argifyPermissions } from "./lib/permissions.ts";
 import { defaultEmptyObject, toArgsStringList } from "./lib/utils.ts";
-import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
-import { existsSync } from "./deps.ts";
 
 export interface Permissions {
   allowAll?: boolean;
@@ -55,6 +60,14 @@ export interface GlobalConfig extends CommonDenoConfig {
    * that is going to be executed.
    */
   debug?: boolean;
+  /**
+   * Import map path
+   */
+  importMap?: string;
+  /**
+   * Enable unstable features
+   */
+  unstable?: boolean;
 }
 
 export interface ScriptFile extends CommonDenoConfig {
@@ -95,20 +108,20 @@ export async function Scripts(
    * Global configuration added to every script
    */
   globalConfig: GlobalConfig = defaultEmptyObject
-): Promise<Deno.Process | null> {
+): Promise<void> {
   {
     const [scriptArg, ...restArg] = Deno.args;
 
     if (!scriptArg) {
-      console.log("Specify a script to be executed!");
-      return null;
+      console.log(colors.red("Specify a script to be executed!"));
+      Deno.exit(1);
     }
 
     const script = config[scriptArg];
 
     if (script == null) {
-      console.error(`script "${scriptArg}" not found!`);
-      return null;
+      console.error(colors.red(`script "${scriptArg}" not found!`));
+      Deno.exit(1);
     }
 
     defaultCommonArgs(script, globalConfig);
@@ -143,9 +156,11 @@ export async function Scripts(
         "run",
         ...argifyPermissions(script.permissions, globalConfig.permissions),
         ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
-        ...argifyPrePostArgs(script.denoArgs, globalConfig.denoArgs),
+        ...argifyArgs(script.denoArgs, globalConfig.denoArgs),
+        ...argifyImportMap(globalConfig.importMap),
+        ...argifyUnstable(globalConfig.unstable),
         script.file,
-        ...argifyPrePostArgs(script.args, globalConfig.args),
+        ...argifyArgs(script.args, globalConfig.args),
         ...restArg,
       ];
       if (globalConfig.debug) {
@@ -162,13 +177,11 @@ export async function Scripts(
         env,
       });
 
-      await process.status();
-
-      return process;
+      Deno.exit((await process.status()).code);
     } else if (script.run) {
       const cmd = [
         ...toArgsStringList(script.run),
-        ...argifyPrePostArgs(script.args, globalConfig.args),
+        ...argifyArgs(script.args, globalConfig.args),
         ...restArg,
       ];
       if (globalConfig.debug) {
@@ -182,12 +195,10 @@ export async function Scripts(
         env,
       });
 
-      await process.status();
-
-      return process;
+      Deno.exit((await process.status()).code);
     } else {
-      console.error("Script not found!");
-      return null;
+      console.error(colors.red("Script not found!"));
+      Deno.exit(1);
     }
   }
 }

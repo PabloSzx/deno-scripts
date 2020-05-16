@@ -16,5 +16,6 @@ Scripts(
       allowRead: true,
       allowRun: true,
     },
+    debug: true,
   }
 );

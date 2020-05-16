@@ -21,7 +21,7 @@ function parse(string: string): Record<string, string> {
 }
 
 /**
- * Read an env file from the specified path, or if it's not specified, from ".env"
+ * Read an env file from the specified path
  */
 export async function loadEnvFromFile(
   path: string

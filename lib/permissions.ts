@@ -41,7 +41,7 @@ export function argifyPermissions(
             break;
           }
           case "allowPlugin": {
-            argsPermissions.push("-allow-plugin");
+            argsPermissions.push("--allow-plugin");
             break;
           }
           case "allowRead": {
