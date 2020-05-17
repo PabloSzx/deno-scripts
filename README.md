@@ -2,6 +2,11 @@
 
 Type-safe centralized Deno project scripts 🦕
 
+[![deno version](https://img.shields.io/badge/deno-1.0.0-success)](https://github.com/denoland/deno)
+[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/deno_sripts/mod.ts)
+[![ci](https://github.com/PabloSzx/deno_scripts/workflows/test/badge.svg)](https://github.com/PabloSzx/deno_scripts/actions)
+[![license](https://img.shields.io/github/license/PabloSzx/deno_scripts)](https://github.com/PabloSzx/deno_scripts/blob/master/LICENSE)
+
 ## Install
 
 > You can change `ds` to any name you prefer calling it
@@ -12,6 +17,7 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 **Table of Contents**
 
 - [Features](#features)
@@ -158,7 +164,34 @@ interface ScriptFile {
   /**
    * Enable watch and/or specify options
    */
-  watch?: boolean | WatchOptions;
+  watch?:
+    | boolean
+    | {
+        /**
+         * Paths to add while watching
+         */
+        paths?: string[];
+        /**
+         * Watch for the specified Glob
+         */
+        match?: (string | RegExp)[];
+        /**
+         * Skip the specified paths or files
+         */
+        skip?: (string | RegExp)[];
+        /**
+         * Specify extensions to be watched
+         */
+        extensions?: string[];
+        /**
+         * Interval used while watching files
+         */
+        interval?: number;
+        /**
+         * Recursively watch all files of the paths
+         */
+        recursive?: boolean;
+      };
 }
 ```
 
@@ -195,7 +228,34 @@ interface ScriptRun {
   /**
    * Enable watch and/or specify options
    */
-  watch?: boolean | WatchOptions;
+  watch?:
+    | boolean
+    | {
+        /**
+         * Paths to add while watching
+         */
+        paths?: string[];
+        /**
+         * Watch for the specified Glob
+         */
+        match?: (string | RegExp)[];
+        /**
+         * Skip the specified paths or files
+         */
+        skip?: (string | RegExp)[];
+        /**
+         * Specify extensions to be watched
+         */
+        extensions?: string[];
+        /**
+         * Interval used while watching files
+         */
+        interval?: number;
+        /**
+         * Recursively watch all files of the paths
+         */
+        recursive?: boolean;
+      };
 }
 ```
 
@@ -260,7 +320,32 @@ interface GlobalConfig {
   /**
    * Default watch options
    */
-  watch?: WatchOptions;
+  watch?: {
+    /**
+     * Paths to add while watching
+     */
+    paths?: string[];
+    /**
+     * Watch for the specified Glob
+     */
+    match?: (string | RegExp)[];
+    /**
+     * Skip the specified paths or files
+     */
+    skip?: (string | RegExp)[];
+    /**
+     * Specify extensions to be watched
+     */
+    extensions?: string[];
+    /**
+     * Interval used while watching files
+     */
+    interval?: number;
+    /**
+     * Recursively watch all files of the paths
+     */
+    recursive?: boolean;
+  };
   /**
    * Permissions management
    *
@@ -294,11 +379,38 @@ interface GlobalConfig {
   /**
    * Enable watch and/or specify options
    */
-  watch?: boolean | WatchOptions;
+  watch?:
+    | boolean
+    | {
+        /**
+         * Paths to add while watching
+         */
+        paths?: string[];
+        /**
+         * Watch for the specified Glob
+         */
+        match?: (string | RegExp)[];
+        /**
+         * Skip the specified paths or files
+         */
+        skip?: (string | RegExp)[];
+        /**
+         * Specify extensions to be watched
+         */
+        extensions?: string[];
+        /**
+         * Interval used while watching files
+         */
+        interval?: number;
+        /**
+         * Recursively watch all files of the paths
+         */
+        recursive?: boolean;
+      };
 }
 ```
 
-### Concurrent script
+### Concurrent scripts
 
 To execute scripts concurrently you have to specify an extra `concurrentScripts` field in your global configuration.
 
@@ -340,3 +452,9 @@ Then you can just call them like any other script:
 ds helloWorldParallel
 ds helloWorldSequential
 ```
+
+## Contributing
+
+This project is aimed to be a improved `package.json` scripts, but adding a lot a features commonly added by third party libraries.
+
+If you have an idea of a feature, the Issues and Pull Requests are open.
