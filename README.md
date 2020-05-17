@@ -35,6 +35,7 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
 - [x] Permissions management
 - [x] Environment variables support (from `.env` or from _config_)
 - [x] Watching for files changes support
+- [x] Automatic `deno fmt`
 - [x] Concurrent script execution (`parallel` or `sequential`) support
 
 ## Usage
