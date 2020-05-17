@@ -29,10 +29,12 @@ RegExp.prototype.toJSON = function () {
   if (!regex101Reminded) {
     regex101Reminded = true;
     debug(
-      `You can copy the regular expressions into ${colors.black(
-        colors.bgCyan("https://regex101.com/")
-      )} and debug there\n`,
-      "Regex101"
+      `You can copy the regular expressions into ${
+        colors.black(
+          colors.bgCyan("https://regex101.com/"),
+        )
+      } and debug there\n`,
+      "Regex101",
     );
   }
 
@@ -50,8 +52,8 @@ export function debug(data: unknown, title?: string, name?: string) {
             typeof data === "object"
               ? "\n" + JSON.stringify(data, null, 2).replace(/\\\\/g, "\\")
               : (data as string)
-          }`
-        )
+          }`,
+        ),
     );
   }
 }

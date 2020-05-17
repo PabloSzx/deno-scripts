@@ -46,6 +46,7 @@ Scripts(
         mode: "sequential",
       },
     },
+    fmt: true,
     colors: true,
-  }
+  },
 );

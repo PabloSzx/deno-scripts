@@ -1,3 +1,3 @@
-console.log(11222322);
+console.log(111);
 
 console.warn(Deno.env.get("hello"));

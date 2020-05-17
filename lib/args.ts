@@ -2,7 +2,7 @@ import { defaultEmptyArray, toArgsStringList } from "./utils.ts";
 
 export function argifyArgs(
   localArgs: string | string[] | undefined,
-  globalArgs: string | string[] | undefined
+  globalArgs: string | string[] | undefined,
 ): string[] {
   const args: string[] = [];
 
@@ -19,7 +19,7 @@ export function argifyArgs(
 
 export function argifyTsconfig(
   localTsconfig: string | undefined,
-  globalTsconfig: string | undefined
+  globalTsconfig: string | undefined,
 ): string[] {
   if (localTsconfig) {
     return ["-c", localTsconfig];

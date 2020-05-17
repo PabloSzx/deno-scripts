@@ -2,7 +2,7 @@ export const defaultEmptyObject = Object.freeze({}) as {};
 export const defaultEmptyArray: any[] = Object.freeze([]) as [];
 
 export function toArgsStringList(
-  args: string | string[] | undefined
+  args: string | string[] | undefined,
 ): string[] {
   if (args == null) return defaultEmptyArray;
 

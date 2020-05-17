@@ -26,7 +26,7 @@ if (import.meta.main) {
             start: {
               file: "./mod.ts",
             },
-          });`
+          });`,
         );
 
         await Deno.run({

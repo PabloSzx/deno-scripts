@@ -69,7 +69,7 @@ export class Watcher implements AsyncIterable<FileChange[]> {
       match = undefined,
       skip = undefined,
     }: WatchOptions = {},
-    scriptName: string
+    scriptName: string,
   ) {
     this.paths = paths.map((p) => path.resolve(p));
     this.interval = interval;
@@ -96,7 +96,7 @@ export class Watcher implements AsyncIterable<FileChange[]> {
         recursive: this.recursive,
       },
       "Watcher options",
-      scriptName
+      scriptName,
     );
   }
 
@@ -123,9 +123,11 @@ export class Watcher implements AsyncIterable<FileChange[]> {
       timer = setTimeout(this.signal.resolve, this.interval);
     };
 
-    for await (const event of Deno.watchFs(this.paths, {
-      recursive: this.recursive,
-    })) {
+    for await (
+      const event of Deno.watchFs(this.paths, {
+        recursive: this.recursive,
+      })
+    ) {
       const { kind, paths } = event;
       paths.forEach((path) => {
         if (this.isWatched(path) && kind !== "access") {

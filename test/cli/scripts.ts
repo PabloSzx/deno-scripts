@@ -25,5 +25,5 @@ Scripts(
   {
     colors: false,
     debug: false,
-  }
+  },
 );

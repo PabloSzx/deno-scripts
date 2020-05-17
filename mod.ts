@@ -119,6 +119,10 @@ export interface GlobalConfig<ConfigKeys> extends CommonDenoConfig {
    * `true` by default.
    */
   colors?: boolean;
+  /**
+   * Execute `deno fmt` automatically
+   */
+  fmt?: boolean | string | string[];
 }
 
 export interface ScriptFile extends CommonDenoConfig {
@@ -152,7 +156,7 @@ type ScriptConcurrent<T> = {
 
 function defaultCommonArgs<
   LocalConfig extends CommonArgs,
-  GlobalConfig extends CommonArgs
+  GlobalConfig extends CommonArgs,
 >(_local: LocalConfig, global: GlobalConfig) {
   // If envFile is not specified, it will check if a `.env` exists
   // And if it does, it will turn it `true`
@@ -163,12 +167,31 @@ function defaultCommonArgs<
   }
 }
 
+async function autoFmt(fmtConfig?: boolean | string | string[]) {
+  if (fmtConfig || fmtConfig === "") {
+    const cmd = [
+      "deno",
+      "fmt",
+      ...(typeof fmtConfig !== "boolean"
+        ? toArgsStringList(fmtConfig)
+        : defaultEmptyArray),
+    ];
+    debug(cmd.join(" "), 'Automatic "deno fmt"');
+    await Deno.run({
+      cmd,
+    }).status();
+
+    return true;
+  }
+  return false;
+}
+
 /**
  * **deno_scripts** configuration constructor
  */
 export async function Scripts<
   TConfig extends Record<string, ScriptFile | ScriptRun>,
-  TConfigKeys extends keyof TConfig
+  TConfigKeys extends keyof TConfig,
 >(
   /**
    * Localized scripts configuration
@@ -177,7 +200,7 @@ export async function Scripts<
   /**
    * Global configuration added to every script
    */
-  globalConfig: GlobalConfig<TConfigKeys> = defaultEmptyObject
+  globalConfig: GlobalConfig<TConfigKeys> = defaultEmptyObject,
 ): Promise<void> {
   {
     const [scriptArg, ...restArg] = Deno.args;
@@ -194,12 +217,12 @@ export async function Scripts<
 
     const scriptKeys = Object.keys(localConfig);
     const concurrentKeys = Object.keys(
-      globalConfig.concurrentScripts || defaultEmptyObject
+      globalConfig.concurrentScripts || defaultEmptyObject,
     );
     for (const concurrentScriptKey of concurrentKeys) {
       if (scriptKeys.includes(concurrentScriptKey)) {
         fail(
-          `You can't repeat concurrent script names with normal script names, and ${concurrentScriptKey} exists in both`
+          `You can't repeat concurrent script names with normal script names, and ${concurrentScriptKey} exists in both`,
         );
       }
     }
@@ -225,10 +248,12 @@ export async function Scripts<
       }
 
       log(
-        `Executing scripts "${concurrentScript.scripts.join(", ")}" in ${
-          concurrentScript.mode
-        } mode.`
+        `Executing scripts "${
+          concurrentScript.scripts.join(", ")
+        }" in ${concurrentScript.mode} mode.`,
       );
+
+      await autoFmt(globalConfig.fmt);
 
       if (concurrentScript.mode === "parallel") {
         const scriptResult = await Promise.all(
@@ -236,26 +261,24 @@ export async function Scripts<
             return await (
               await execScript(script, scriptName as string)
             )?.status();
-          })
+          }),
         );
 
-        if (
-          scriptResult.every((result) => {
-            return result?.success;
-          })
-        ) {
+        if (scriptResult.every((result) => result?.success)) {
           Deno.exit(0);
         } else {
           Deno.exit(1);
         }
       } else {
-        for await (const scriptResult of scripts.map(
-          async ({ script, scriptName }) => {
-            return await (
-              await execScript(script, scriptName as string)
-            )?.status();
-          }
-        )) {
+        for await (
+          const scriptResult of scripts.map(
+            async ({ script, scriptName }) => {
+              return await (
+                await execScript(script, scriptName as string)
+              )?.status();
+            },
+          )
+        ) {
           if (!scriptResult?.success) {
             Deno.exit(scriptResult?.code);
           }
@@ -274,6 +297,8 @@ export async function Scripts<
         return;
       }
 
+      await autoFmt(globalConfig.fmt);
+
       const process = await execScript(scriptConfig, scriptArg);
 
       Deno.exit((await process?.status())?.code ?? 1);
@@ -281,7 +306,7 @@ export async function Scripts<
 
     async function execScript(
       script: ScriptFile | ScriptRun,
-      scriptName: string
+      scriptName: string,
     ) {
       defaultCommonArgs(script, globalConfig);
 
@@ -297,7 +322,7 @@ export async function Scripts<
 
       if (envFile) {
         env = await loadEnvFromFile(
-          typeof envFile === "string" ? envFile : ".env"
+          typeof envFile === "string" ? envFile : ".env",
         );
       }
 
@@ -330,9 +355,8 @@ export async function Scripts<
         ...(typeof globalConfig.watch === "object"
           ? globalConfig.watch
           : defaultEmptyObject),
-        ...(typeof script.watch === "object"
-          ? script.watch
-          : defaultEmptyObject),
+        ...(typeof script.watch === "object" ? script.watch
+        : defaultEmptyObject),
       };
 
       if (watchOptions.skip == null) {
@@ -366,7 +390,7 @@ export async function Scripts<
                 env,
               },
               "Command executed",
-              scriptNameColor
+              scriptNameColor,
             );
           }
           const process = Deno.run({
@@ -389,7 +413,7 @@ export async function Scripts<
               match: watchOptions.match,
               skip: watchOptions.skip,
             },
-            scriptNameColor
+            scriptNameColor,
           );
 
           let process = execCommand();
@@ -404,17 +428,19 @@ export async function Scripts<
             });
 
           for await (const changes of watcher) {
+            await autoFmt(globalConfig.fmt);
+
             log(
               `Detected ${changes.length} change${
                 changes.length > 1 ? "s" : ""
-              }. Rerunning ${scriptNameColor}...`
+              }. Rerunning ${scriptNameColor}...`,
             );
 
             for (const change of changes) {
               debug(
                 `File "${change.path}" was ${fileEventToPast(change.event)}`,
                 undefined,
-                scriptNameColor
+                scriptNameColor,
               );
             }
 
@@ -449,7 +475,7 @@ export async function Scripts<
               env,
             },
             "Command to be executed",
-            scriptNameColor
+            scriptNameColor,
           );
         }
         const execCommand = () => {
@@ -474,7 +500,7 @@ export async function Scripts<
               match: watchOptions.match,
               skip: watchOptions.skip,
             },
-            scriptNameColor
+            scriptNameColor,
           );
 
           let process = execCommand();
@@ -488,17 +514,19 @@ export async function Scripts<
             });
 
           for await (const changes of watcher) {
+            await autoFmt(globalConfig.fmt);
+
             log(
               `Detected ${changes.length} change${
                 changes.length > 1 ? "s" : ""
-              }. Rerunning ${scriptNameColor}...`
+              }. Rerunning ${scriptNameColor}...`,
             );
 
             for (const change of changes) {
               debug(
                 `File "${change.path}" was ${fileEventToPast(change.event)}`,
                 undefined,
-                scriptNameColor
+                scriptNameColor,
               );
             }
 

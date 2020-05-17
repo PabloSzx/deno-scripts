@@ -28,7 +28,7 @@ Deno.test("cli run script", async () => {
 
   assertStrContains(
     enc.decode(await runProcess.output()).trim(),
-    "hello world"
+    "hello world",
   );
 
   runProcess.close();
@@ -47,7 +47,7 @@ Deno.test("cli file script", async () => {
 
   assertStrContains(
     new TextDecoder().decode(await runProcess.output()).trim(),
-    "hello world file"
+    "hello world file",
   );
 
   runProcess.close();
@@ -66,7 +66,7 @@ Deno.test("cli wrong script", async () => {
 
   assertStrContains(
     new TextDecoder().decode(await runProcess.stderrOutput()).trim(),
-    'script "other" not found!'
+    'script "other" not found!',
   );
 
   runProcess.close();

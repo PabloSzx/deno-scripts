@@ -26,6 +26,6 @@ Deno.test("loads env from object", async () => {
       a: "a",
       b: "1",
       c: "true",
-    }
+    },
   );
 });

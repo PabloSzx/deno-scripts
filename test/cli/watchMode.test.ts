@@ -4,7 +4,7 @@ import { delay } from "../../lib/utils.ts";
 import { fixDirnameWindows } from "../utils.ts";
 
 // GitHub actions has a bug with piped output
-// therefore, these test simply don't work
+// therefore, these tests simply don't work
 if (Deno.env.get("GITHUB")) {
   Deno.exit(0);
 }
@@ -18,11 +18,13 @@ const CLIFileLocation = path.resolve(dirname, "../../cli.ts");
 const FileToWatchLocation = path.resolve(dirname, "./testWatchFile.ts");
 
 const getNewRandomString = (n: number) => {
-  return `\`${JSON.stringify(
-    crypto.getRandomValues(new Uint8Array(n)),
-    null,
-    0
-  )}\``;
+  return `\`${
+    JSON.stringify(
+      crypto.getRandomValues(new Uint8Array(n)),
+      null,
+      0,
+    )
+  }\``;
 };
 
 Deno.test("watch run script", async () => {
@@ -32,7 +34,7 @@ Deno.test("watch run script", async () => {
     FileToWatchLocation,
     `
         console.log("log="+${randomString});
-        `.trim() + "\n"
+        `.trim() + "\n",
   );
 
   const runProcess = Deno.run({
@@ -63,7 +65,7 @@ Deno.test("watch run script", async () => {
     FileToWatchLocation,
     `
         console.log("log="+${randomString});
-        `.trim()
+        `.trim(),
   );
 
   await delay(2000);
@@ -80,7 +82,7 @@ Deno.test("watch run script", async () => {
 
   assertStrContains(
     processOutput.toString(),
-    "log=" + randomString.replace(/`/g, "")
+    "log=" + randomString.replace(/`/g, ""),
   );
 
   assertStrContains(processOutput, "Waiting for changes...");
@@ -93,7 +95,7 @@ Deno.test("watch file script", async () => {
     FileToWatchLocation,
     `
       console.log("log="+${randomString});
-      `.trim() + "\n"
+      `.trim() + "\n",
   );
 
   const runProcess = Deno.run({
@@ -123,7 +125,7 @@ Deno.test("watch file script", async () => {
     FileToWatchLocation,
     `
       console.log("log="+${randomString});
-      `.trim()
+      `.trim(),
   );
 
   await delay(2000);

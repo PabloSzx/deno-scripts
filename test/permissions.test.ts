@@ -17,9 +17,9 @@ Deno.test("argifies permissions", () => {
         allowRun: true,
         allowWrite: true,
       },
-      {}
+      {},
     ),
-    ["--allow-all"]
+    ["--allow-all"],
   );
 
   /**
@@ -36,7 +36,7 @@ Deno.test("argifies permissions", () => {
         allowRun: true,
         allowWrite: true,
       },
-      {}
+      {},
     ),
     [
       "--allow-hrtime",
@@ -46,7 +46,7 @@ Deno.test("argifies permissions", () => {
       "--allow-read",
       "--allow-run",
       "--allow-write",
-    ]
+    ],
   );
 
   /**
@@ -63,7 +63,7 @@ Deno.test("argifies permissions", () => {
         allowRun: true,
         allowWrite: "write",
       },
-      {}
+      {},
     ),
     [
       "--allow-hrtime",
@@ -73,6 +73,6 @@ Deno.test("argifies permissions", () => {
       "--allow-read=read",
       "--allow-run",
       "--allow-write=write",
-    ]
+    ],
   );
 });

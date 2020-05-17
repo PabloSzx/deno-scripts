@@ -16,7 +16,7 @@ function parse(string: string): Record<string, string> {
       }
 
       return [key, val];
-    })
+    }),
   );
 }
 
@@ -24,7 +24,7 @@ function parse(string: string): Record<string, string> {
  * Read an env file from the specified path
  */
 export async function loadEnvFromFile(
-  path: string
+  path: string,
 ): Promise<ReturnType<typeof parse>> {
   const file = await Deno.readFile(path);
   const decoder = new TextDecoder();
@@ -35,9 +35,9 @@ export async function loadEnvFromFile(
  * Stringify env object values
  */
 export function loadEnvFromObject(
-  envObj: Record<string, string | number | boolean>
+  envObj: Record<string, string | number | boolean>,
 ): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(envObj).map(([key, value]) => [key, String(value)])
+    Object.entries(envObj).map(([key, value]) => [key, String(value)]),
   );
 }

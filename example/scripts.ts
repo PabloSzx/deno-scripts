@@ -17,5 +17,5 @@ Scripts(
       allowRun: true,
     },
     debug: true,
-  }
+  },
 );
