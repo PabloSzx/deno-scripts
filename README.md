@@ -12,7 +12,6 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 **Table of Contents**
 
 - [Features](#features)
@@ -20,6 +19,7 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
   - [File script configuration](#file-script-configuration)
   - [Run script configuration](#run-script-configuration)
   - [Global configuration](#global-configuration)
+  - [Concurrent script](#concurrent-script)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
