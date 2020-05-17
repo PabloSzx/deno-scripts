@@ -15,7 +15,7 @@ Scripts(
       },
     },
     watchRun: {
-      run: "cat ./testWatchFile.ts",
+      run: "deno run ./testWatchFile.ts",
       watch: {
         match: ["*/testWatchFile.ts"],
         interval: 100,

@@ -33,10 +33,15 @@ It will generate a `scripts.ts` file like so
 import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
 
 Scripts({
-  foo: {
-    run: "echo dev",
+  test: {
+    run: "deno test -A",
+    watch: true,
   },
-  bar: {
+  dev: {
+    file: "./mod.ts",
+    watch: true,
+  },
+  start: {
     file: "./mod.ts",
   },
 });

@@ -6,8 +6,8 @@ Scripts(
       file: "./dev.ts",
       permissions: {},
     },
-    asd: {
-      run: "echo hello world",
+    test: {
+      run: "deno test -A",
     },
   },
   {

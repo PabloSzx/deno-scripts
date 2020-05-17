@@ -68,7 +68,8 @@ export class Watcher implements AsyncIterable<FileChange[]> {
       exts = undefined,
       match = undefined,
       skip = undefined,
-    }: WatchOptions = {}
+    }: WatchOptions = {},
+    scriptName: string
   ) {
     this.paths = paths.map((p) => path.resolve(p));
     this.interval = interval;
@@ -94,7 +95,8 @@ export class Watcher implements AsyncIterable<FileChange[]> {
         skip: this.skip,
         recursive: this.recursive,
       },
-      "Watcher options"
+      "Watcher options",
+      scriptName
     );
   }
 

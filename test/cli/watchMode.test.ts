@@ -1,7 +1,7 @@
 import { path } from "../../deps.ts";
 import { __, assertStrContains } from "../../dev_deps.ts";
-import { fixDirnameWindows } from "../utils.ts";
 import { delay } from "../../lib/utils.ts";
+import { fixDirnameWindows } from "../utils.ts";
 
 let { dirname } = __(import.meta);
 
@@ -20,8 +20,14 @@ const getNewRandomString = (n: number) => {
 };
 
 Deno.test("watch run script", async () => {
-  let randomString = getNewRandomString(5);
-  await Deno.writeTextFile(FileToWatchLocation, randomString);
+  let randomString = getNewRandomString(7);
+
+  await Deno.writeTextFile(
+    FileToWatchLocation,
+    `
+      console.log("log="+${randomString});
+      `.trim() + "\n"
+  );
 
   const runProcess = Deno.run({
     cwd: dirname,
@@ -33,7 +39,9 @@ Deno.test("watch run script", async () => {
 
   await delay(1000);
 
-  const enc = new TextDecoder();
+  const enc = new TextDecoder("utf-8", {
+    ignoreBOM: true,
+  });
 
   let buff = new Uint8Array(1024);
 
@@ -41,17 +49,22 @@ Deno.test("watch run script", async () => {
 
   let processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, randomString);
+  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
 
   assertStrContains(processOutput, "Waiting for changes...");
 
-  randomString = getNewRandomString(6);
+  randomString = getNewRandomString(8);
 
-  await Deno.writeTextFile(FileToWatchLocation, randomString);
-
-  buff = new Uint8Array(1024);
+  await Deno.writeTextFile(
+    FileToWatchLocation,
+    `
+      console.log("log="+${randomString});
+      `.trim()
+  );
 
   await delay(1000);
+
+  buff = new Uint8Array(1024);
 
   await runProcess.stdout!.read(buff);
 
@@ -61,7 +74,7 @@ Deno.test("watch run script", async () => {
 
   processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, randomString);
+  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
 
   assertStrContains(processOutput, "Waiting for changes...");
 });
@@ -73,7 +86,7 @@ Deno.test("watch file script", async () => {
     FileToWatchLocation,
     `
       console.log("log="+${randomString});
-      `.trim()
+      `.trim() + "\n"
   );
 
   const runProcess = Deno.run({
@@ -86,7 +99,9 @@ Deno.test("watch file script", async () => {
 
   await delay(1000);
 
-  const enc = new TextDecoder();
+  const enc = new TextDecoder("utf-8", {
+    ignoreBOM: true,
+  });
 
   let buff = new Uint8Array(1024);
 

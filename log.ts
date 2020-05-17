@@ -41,10 +41,12 @@ RegExp.prototype.toJSON = function () {
   return this.toString();
 };
 
-export function debug(data: unknown, title?: string) {
+export function debug(data: unknown, title?: string, name?: string) {
   if (debugEnabled) {
     console.log(
-      `${prefix} ${title ? colors.bgMagenta(title) + " " : ""}` +
+      `${prefix} ${name ? name + " " : ""}${
+        title ? colors.bgMagenta(title) + " " : ""
+      }` +
         colors.yellow(
           `${
             typeof data === "object"

@@ -1,4 +1,4 @@
-import { existsSync, exists } from "./deps.ts";
+import { colors, exists, existsSync } from "./deps.ts";
 import {
   argifyArgs,
   argifyImportMap,
@@ -8,11 +8,11 @@ import {
 import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
 import { argifyPermissions } from "./lib/permissions.ts";
 import {
+  defaultEmptyArray,
   defaultEmptyObject,
   toArgsStringList,
-  defaultEmptyArray,
 } from "./lib/utils.ts";
-import { fail, debug, log, warn, setDebugMode } from "./log.ts";
+import { debug, fail, log, setDebugMode, warn } from "./log.ts";
 import { fileEventToPast, Watcher } from "./watcher.ts";
 
 export interface Permissions {
@@ -161,7 +161,10 @@ export async function Scripts<
   TConfig extends Record<string, ScriptFile | ScriptRun>,
   TConfigKeys extends keyof TConfig
 >(
-  config: TConfig,
+  /**
+   * Localized scripts configuration
+   */
+  localConfig: TConfig,
   /**
    * Global configuration added to every script
    */
@@ -174,81 +177,256 @@ export async function Scripts<
       fail("Specify a script to be executed!");
     }
 
-    const script = config[scriptArg];
-
-    if (script == null) {
-      fail(`script "${scriptArg}" not found!`);
-    }
-
-    defaultCommonArgs(script, globalConfig);
-
     if (globalConfig.debug) {
       setDebugMode(globalConfig.debug);
     }
 
-    const envFile = script.envFile ?? globalConfig.envFile;
-
-    let env: Record<string, string> | undefined;
-
-    if (envFile) {
-      env = await loadEnvFromFile(
-        typeof envFile === "string" ? envFile : ".env"
-      );
+    const scriptKeys = Object.keys(localConfig);
+    const concurrentKeys = Object.keys(
+      globalConfig.concurrentScripts || defaultEmptyObject
+    );
+    for (const concurrentScriptKey of concurrentKeys) {
+      if (scriptKeys.includes(concurrentScriptKey)) {
+        fail(
+          `You can't repeat concurrent script names with normal script names, and ${concurrentScriptKey} exists in both`
+        );
+      }
     }
 
-    if (globalConfig.env) {
-      env = {
-        ...(env || defaultEmptyObject),
-        ...loadEnvFromObject(globalConfig.env),
-      };
-    }
+    const concurrentScript = globalConfig.concurrentScripts?.[scriptArg];
 
-    if (script.env) {
-      env = {
-        ...(env || defaultEmptyObject),
-        ...loadEnvFromObject(script.env),
-      };
-    }
+    if (concurrentScript != null) {
+      concurrentScript.mode = concurrentScript.mode || "parallel";
 
-    const globalPermissions: Permissions = globalConfig.permissions || {};
+      const scripts = concurrentScript.scripts.map((scriptName) => {
+        const script = localConfig[scriptName];
+        if (script == null) {
+          fail(`script "${scriptArg}" not found!`);
+        }
+        return {
+          script,
+          scriptName,
+        };
+      });
 
-    if (env) {
-      globalPermissions.allowEnv = true;
-    }
-
-    const watchModeEnabled = Boolean(script.watch ?? globalConfig.watch);
-    if (watchModeEnabled) {
-      log("Watch mode enabled.");
-    }
-
-    const watchOptions: WatchOptions = {
-      ...(typeof globalConfig.watch === "object"
-        ? globalConfig.watch
-        : defaultEmptyObject),
-      ...(typeof script.watch === "object" ? script.watch : defaultEmptyObject),
-    };
-
-    if (watchOptions.skip == null) {
-      watchOptions.skip = ["*/.git/*"];
-    } else {
-      watchOptions.skip.push("*/.git/*");
-    }
-
-    if (script.file) {
-      if (!(await exists(script.file))) {
-        fail(`File ${script.file} not found!`);
+      if (scripts.length === 0) {
+        fail(`Specify at least 1 script for ${scriptArg}`);
       }
 
-      const execCommand = () => {
+      log(
+        `Executing scripts "${concurrentScript.scripts.join(", ")}" in ${
+          concurrentScript.mode
+        } mode.`
+      );
+
+      if (concurrentScript.mode === "parallel") {
+        const scriptResult = await Promise.all(
+          scripts.map(async ({ script, scriptName }) => {
+            return await (
+              await execScript(script, scriptName as string)
+            )?.status();
+          })
+        );
+
+        if (
+          scriptResult.every((result) => {
+            return result?.success;
+          })
+        ) {
+          Deno.exit(0);
+        } else {
+          Deno.exit(1);
+        }
+      } else {
+        for await (const scriptResult of scripts.map(
+          async ({ script, scriptName }) => {
+            return await (
+              await execScript(script, scriptName as string)
+            )?.status();
+          }
+        )) {
+          if (!scriptResult?.success) {
+            Deno.exit(scriptResult?.code);
+          }
+        }
+
+        Deno.exit(0);
+      }
+    } else {
+      const scriptConfig = localConfig[scriptArg] as
+        | ScriptFile
+        | ScriptRun
+        | undefined;
+
+      if (scriptConfig == null) {
+        fail(`script "${scriptArg}" not found!`);
+        return;
+      }
+
+      const process = await execScript(scriptConfig, scriptArg);
+
+      Deno.exit((await process?.status())?.code ?? 1);
+    }
+
+    async function execScript(
+      script: ScriptFile | ScriptRun,
+      scriptName: string
+    ) {
+      defaultCommonArgs(script, globalConfig);
+
+      const scriptNameColor = colors.black(colors.bgWhite(scriptName));
+      const waitingForChangesLog = () => {
+        log(`${scriptNameColor} Waiting for changes...`);
+      };
+
+      const envFile = script.envFile ?? globalConfig.envFile;
+
+      let env: Record<string, string> | undefined;
+
+      if (envFile) {
+        env = await loadEnvFromFile(
+          typeof envFile === "string" ? envFile : ".env"
+        );
+      }
+
+      if (globalConfig.env) {
+        env = {
+          ...(env || defaultEmptyObject),
+          ...loadEnvFromObject(globalConfig.env),
+        };
+      }
+
+      if (script.env) {
+        env = {
+          ...(env || defaultEmptyObject),
+          ...loadEnvFromObject(script.env),
+        };
+      }
+
+      const globalPermissions: Permissions = globalConfig.permissions || {};
+
+      if (env) {
+        globalPermissions.allowEnv = true;
+      }
+
+      const watchModeEnabled = Boolean(script.watch ?? globalConfig.watch);
+      if (watchModeEnabled) {
+        log(`Watch mode enabled for ${scriptNameColor}.`);
+      }
+
+      const watchOptions: WatchOptions = {
+        ...(typeof globalConfig.watch === "object"
+          ? globalConfig.watch
+          : defaultEmptyObject),
+        ...(typeof script.watch === "object"
+          ? script.watch
+          : defaultEmptyObject),
+      };
+
+      if (watchOptions.skip == null) {
+        watchOptions.skip = ["*/.git/*"];
+      } else {
+        watchOptions.skip.push("*/.git/*");
+      }
+
+      if (script.file) {
+        if (!(await exists(script.file))) {
+          fail(`File ${script.file} not found!`);
+        }
+
+        const execCommand = () => {
+          const cmd = [
+            "deno",
+            "run",
+            ...argifyPermissions(script.permissions, globalPermissions),
+            ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
+            ...argifyArgs(script.denoArgs, globalConfig.denoArgs),
+            ...argifyImportMap(globalConfig.importMap),
+            ...argifyUnstable(globalConfig.unstable),
+            script.file,
+            ...argifyArgs(script.args, globalConfig.args),
+            ...restArg,
+          ];
+          if (globalConfig.debug) {
+            debug(
+              {
+                cmd: cmd.join(" "),
+                env,
+              },
+              "Command executed",
+              scriptNameColor
+            );
+          }
+          const process = Deno.run({
+            cmd,
+            stdout: "inherit",
+            stderr: "inherit",
+            stdin: "inherit",
+            env,
+          });
+
+          return process;
+        };
+        if (watchModeEnabled) {
+          const watcher = new Watcher(
+            [script.file, ...(watchOptions.paths || defaultEmptyArray)],
+            {
+              interval: watchOptions.interval,
+              recursive: watchOptions.recursive,
+              exts: watchOptions.extensions,
+              match: watchOptions.match,
+              skip: watchOptions.skip,
+            },
+            scriptNameColor
+          );
+
+          let process = execCommand();
+
+          process
+            .status()
+            .then(() => {
+              waitingForChangesLog();
+            })
+            .catch((err) => {
+              warn(err.message);
+            });
+
+          for await (const changes of watcher) {
+            log(
+              `Detected ${changes.length} change${
+                changes.length > 1 ? "s" : ""
+              }. Rerunning ${scriptNameColor}...`
+            );
+
+            for (const change of changes) {
+              debug(
+                `File "${change.path}" was ${fileEventToPast(change.event)}`,
+                undefined,
+                scriptNameColor
+              );
+            }
+
+            process.close();
+
+            process = execCommand();
+
+            process
+              .status()
+              .then(() => {
+                waitingForChangesLog();
+              })
+              .catch((err) => {
+                warn(err.message);
+              });
+          }
+        } else {
+          const process = execCommand();
+
+          return process;
+        }
+      } else if (script.run) {
         const cmd = [
-          "deno",
-          "run",
-          ...argifyPermissions(script.permissions, globalPermissions),
-          ...argifyTsconfig(script.tsconfig, globalConfig.tsconfig),
-          ...argifyArgs(script.denoArgs, globalConfig.denoArgs),
-          ...argifyImportMap(globalConfig.importMap),
-          ...argifyUnstable(globalConfig.unstable),
-          script.file,
+          ...toArgsStringList(script.run),
           ...argifyArgs(script.args, globalConfig.args),
           ...restArg,
         ];
@@ -258,145 +436,81 @@ export async function Scripts<
               cmd: cmd.join(" "),
               env,
             },
-            "Command executed"
+            "Command to be executed",
+            scriptNameColor
           );
         }
-        const process = Deno.run({
-          cmd,
-          stdout: "inherit",
-          stderr: "inherit",
-          stdin: "inherit",
-          env,
-        });
-
-        return process;
-      };
-      if (watchModeEnabled) {
-        const watcher = new Watcher(
-          [script.file, ...(watchOptions.paths || defaultEmptyArray)],
-          {
-            interval: watchOptions.interval,
-            recursive: watchOptions.recursive,
-            exts: watchOptions.extensions,
-            match: watchOptions.match,
-            skip: watchOptions.skip,
-          }
-        );
-
-        let process = execCommand();
-
-        process
-          .status()
-          .then(() => {
-            log("Waiting for changes...");
-          })
-          .catch((err) => {
-            warn(err.message);
-          });
-
-        for await (const changes of watcher) {
-          log(
-            `Detected ${changes.length} change${
-              changes.length > 1 ? "s" : ""
-            }. Rerunning...`
-          );
-
-          for (const change of changes) {
-            debug(`File "${change.path}" was ${fileEventToPast(change.event)}`);
-          }
-
-          process.close();
-
-          process = execCommand();
-
-          process
-            .status()
-            .then(() => {
-              log("Waiting for changes...");
-            })
-            .catch((err) => {
-              warn(err.message);
-            });
-        }
-      } else {
-        const process = execCommand();
-        Deno.exit((await process.status()).code);
-      }
-    } else if (script.run) {
-      const cmd = [
-        ...toArgsStringList(script.run),
-        ...argifyArgs(script.args, globalConfig.args),
-        ...restArg,
-      ];
-      if (globalConfig.debug) {
-        debug(
-          {
-            cmd: cmd.join(" "),
+        const execCommand = () => {
+          const process = Deno.run({
+            cmd,
             env,
-          },
-          "Command to be executed"
-        );
-      }
-      const execCommand = () => {
-        return Deno.run({
-          cmd,
-          env,
-        });
-      };
-
-      if (watchModeEnabled) {
-        if (watchOptions.paths?.length ?? 0 === 0) {
-          watchOptions.paths = ["./"];
-        }
-        const watcher = new Watcher(watchOptions.paths || defaultEmptyArray, {
-          interval: watchOptions.interval,
-          recursive: watchOptions.recursive,
-          exts: watchOptions.extensions,
-          match: watchOptions.match,
-          skip: watchOptions.skip,
-        });
-
-        let process = execCommand();
-
-        process
-          .status()
-          .then(() => {
-            log("Waiting for changes...");
-          })
-          .catch((err) => {
-            warn(err.message);
           });
 
-        for await (const changes of watcher) {
-          log(
-            `Detected ${changes.length} change${
-              changes.length > 1 ? "s" : ""
-            }. Rerunning...`
+          return process;
+        };
+
+        if (watchModeEnabled) {
+          if (watchOptions.paths?.length ?? 0 === 0) {
+            watchOptions.paths = ["./"];
+          }
+          const watcher = new Watcher(
+            watchOptions.paths || defaultEmptyArray,
+            {
+              interval: watchOptions.interval,
+              recursive: watchOptions.recursive,
+              exts: watchOptions.extensions,
+              match: watchOptions.match,
+              skip: watchOptions.skip,
+            },
+            scriptNameColor
           );
 
-          for (const change of changes) {
-            debug(`File "${change.path}" was ${fileEventToPast(change.event)}`);
-          }
-
-          process.close();
-
-          process = execCommand();
-
+          let process = execCommand();
           process
             .status()
             .then(() => {
-              log("Waiting for changes...");
+              waitingForChangesLog();
             })
             .catch((err) => {
               warn(err.message);
             });
+
+          for await (const changes of watcher) {
+            log(
+              `Detected ${changes.length} change${
+                changes.length > 1 ? "s" : ""
+              }. Rerunning ${scriptNameColor}...`
+            );
+
+            for (const change of changes) {
+              debug(
+                `File "${change.path}" was ${fileEventToPast(change.event)}`,
+                undefined,
+                scriptNameColor
+              );
+            }
+
+            process.close();
+
+            process = execCommand();
+
+            process
+              .status()
+              .then(() => {
+                waitingForChangesLog();
+              })
+              .catch((err) => {
+                warn(err.message);
+              });
+          }
+        } else {
+          const process = execCommand();
+
+          return process;
         }
       } else {
-        const process = execCommand();
-        Deno.exit((await process.status()).code);
+        fail("Script not found!");
       }
-    } else {
-      fail("Script not found!");
     }
   }
 }
