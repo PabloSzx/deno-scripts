@@ -1,27 +1,25 @@
 import { colors } from "./deps.ts";
 
-colors.setColorEnabled(true);
-
 let debugEnabled = false;
 
 export const setDebugMode = (enabled: boolean) => {
   debugEnabled = enabled;
 };
 
-const prefix = colors.bgBlack("| deno_scripts |");
+const prefix = () => colors.bgBlack("| deno_scripts |");
 
 export function fail(reason: string, code: number = 1) {
-  console.error(`${prefix} ${colors.red(reason)}`);
+  console.error(`${prefix()} ${colors.red(reason)}`);
 
   Deno.exit(code);
 }
 
 export function log(text: string) {
-  console.log(`${prefix} ${colors.green(text)}`);
+  console.log(`${prefix()} ${colors.green(text)}`);
 }
 
 export function warn(text: string) {
-  console.warn(`${prefix} ${colors.bgYellow(text)}`);
+  console.warn(`${prefix()} ${colors.bgYellow(text)}`);
 }
 
 let regex101Reminded = false;
@@ -44,7 +42,7 @@ RegExp.prototype.toJSON = function () {
 export function debug(data: unknown, title?: string, name?: string) {
   if (debugEnabled) {
     console.log(
-      `${prefix} ${name ? name + " " : ""}${
+      `${prefix()} ${name ? name + " " : ""}${
         title ? colors.bgMagenta(title) + " " : ""
       }` +
         colors.yellow(

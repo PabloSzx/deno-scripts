@@ -23,6 +23,7 @@ Scripts(
     },
   },
   {
-    debug: true,
+    colors: false,
+    debug: false,
   }
 );

@@ -109,7 +109,16 @@ export interface GlobalConfig<ConfigKeys> extends CommonDenoConfig {
    * Enable unstable features
    */
   unstable?: boolean;
+  /**
+   * Concurrent scripts
+   */
   concurrentScripts?: Record<string, ScriptConcurrent<ConfigKeys>>;
+  /**
+   * Enable colors in CLI
+   *
+   * `true` by default.
+   */
+  colors?: boolean;
 }
 
 export interface ScriptFile extends CommonDenoConfig {
@@ -172,6 +181,8 @@ export async function Scripts<
 ): Promise<void> {
   {
     const [scriptArg, ...restArg] = Deno.args;
+
+    colors.setColorEnabled(Boolean(globalConfig.colors ?? true));
 
     if (!scriptArg) {
       fail("Specify a script to be executed!");
@@ -275,6 +286,7 @@ export async function Scripts<
       defaultCommonArgs(script, globalConfig);
 
       const scriptNameColor = colors.black(colors.bgWhite(scriptName));
+
       const waitingForChangesLog = () => {
         log(`${scriptNameColor} Waiting for changes...`);
       };

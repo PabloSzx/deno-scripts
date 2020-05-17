@@ -37,13 +37,11 @@ Deno.test("watch run script", async () => {
     stdout: "piped",
   });
 
-  await delay(1000);
+  await delay(2000);
 
-  const enc = new TextDecoder("utf-8", {
-    ignoreBOM: true,
-  });
+  const enc = new TextDecoder();
 
-  let buff = new Uint8Array(1024);
+  let buff = new Uint8Array(200);
 
   await runProcess.stdout!.read(buff);
 
@@ -62,9 +60,9 @@ Deno.test("watch run script", async () => {
       `.trim()
   );
 
-  await delay(1000);
+  await delay(2000);
 
-  buff = new Uint8Array(1024);
+  buff = new Uint8Array(200);
 
   await runProcess.stdout!.read(buff);
 
@@ -74,7 +72,10 @@ Deno.test("watch run script", async () => {
 
   processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
+  assertStrContains(
+    processOutput.toString(),
+    "log=" + randomString.replace(/`/g, "")
+  );
 
   assertStrContains(processOutput, "Waiting for changes...");
 });
@@ -97,14 +98,11 @@ Deno.test("watch file script", async () => {
     stdout: "piped",
   });
 
-  await delay(1000);
+  await delay(2000);
 
-  const enc = new TextDecoder("utf-8", {
-    ignoreBOM: true,
-  });
+  const enc = new TextDecoder();
 
-  let buff = new Uint8Array(1024);
-
+  let buff = new Uint8Array(200);
   await runProcess.stdout!.read(buff);
 
   let processOutput = enc.decode(buff).trim();
@@ -122,10 +120,9 @@ Deno.test("watch file script", async () => {
       `.trim()
   );
 
-  await delay(1000);
+  await delay(2000);
 
-  buff = new Uint8Array(1024);
-
+  buff = new Uint8Array(200);
   await runProcess.stdout!.read(buff);
 
   runProcess.stdout!.close();
