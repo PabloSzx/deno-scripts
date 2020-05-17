@@ -3,7 +3,7 @@
 Type-safe centralized Deno project scripts 🦕
 
 [![deno version](https://img.shields.io/badge/deno-1.0.0-success)](https://github.com/denoland/deno)
-[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/deno_sripts/mod.ts)
+[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/deno_scripts/mod.ts)
 [![ci](https://github.com/PabloSzx/deno_scripts/workflows/test/badge.svg)](https://github.com/PabloSzx/deno_scripts/actions)
 [![license](https://img.shields.io/github/license/PabloSzx/deno_scripts)](https://github.com/PabloSzx/deno_scripts/blob/master/LICENSE)
 
