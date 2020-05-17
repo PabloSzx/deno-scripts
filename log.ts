@@ -29,6 +29,7 @@ let regex101Reminded = false;
 //@ts-ignore
 RegExp.prototype.toJSON = function () {
   if (!regex101Reminded) {
+    regex101Reminded = true;
     debug(
       `You can copy the regular expressions into ${colors.black(
         colors.bgCyan("https://regex101.com/")

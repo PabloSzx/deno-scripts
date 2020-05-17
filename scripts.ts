@@ -10,7 +10,9 @@ Scripts(
     },
   },
   {
-    watch: true,
+    watch: {
+      skip: ["*testWatchFile.ts"],
+    },
     debug: true,
     env: {
       hello: "world",
