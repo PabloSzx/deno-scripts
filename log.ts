@@ -2,22 +2,55 @@ import { colors } from "./deps.ts";
 
 colors.setColorEnabled(true);
 
+let debugEnabled = false;
+
+export const setDebugMode = (enabled: boolean) => {
+  debugEnabled = enabled;
+};
+
+const prefix = colors.bgBlack("| deno_scripts |");
+
 export function fail(reason: string, code: number = 1) {
-  console.log(colors.red(`| deno_scripts | ${reason}`));
+  console.error(`${prefix} ${colors.red(reason)}`);
 
   Deno.exit(code);
 }
 
 export function log(text: string) {
-  console.log(colors.green(`| deno_scripts | ${text}`));
+  console.log(`${prefix} ${colors.green(text)}`);
 }
 
-export function debug(data: unknown) {
-  console.log(
-    colors.yellow(
-      `| deno_scripts | ${
-        typeof data === "object" ? JSON.stringify(data, null, 2) : data
-      }`
-    )
-  );
+export function warn(text: string) {
+  console.warn(`${prefix} ${colors.bgYellow(text)}`);
+}
+
+let regex101Reminded = false;
+
+//@ts-ignore
+RegExp.prototype.toJSON = function () {
+  if (!regex101Reminded) {
+    debug(
+      `You can copy the regular expressions into ${colors.black(
+        colors.bgCyan("https://regex101.com/")
+      )} and debug there\n`,
+      "Regex101"
+    );
+  }
+
+  return this.toString();
+};
+
+export function debug(data: unknown, title?: string) {
+  if (debugEnabled) {
+    console.log(
+      `${prefix} ${title ? colors.bgMagenta(title) + " " : ""}` +
+        colors.yellow(
+          `${
+            typeof data === "object"
+              ? "\n" + JSON.stringify(data, null, 2).replace(/\\\\/g, "\\")
+              : (data as string)
+          }`
+        )
+    );
+  }
 }

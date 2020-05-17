@@ -18,3 +18,10 @@ export function toArgsStringList(
 }
 
 export const isWindows = Deno.build.os === "windows";
+
+export const delay = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });

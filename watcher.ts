@@ -1,8 +1,26 @@
 // Credits to https://github.com/eliassjogreen/denon
 
 import { path, deferred } from "./deps.ts";
+import { debug } from "./log.ts";
 
 type FileEvent = "any" | "access" | "create" | "modify" | "remove";
+
+export const fileEventToPast = (fileEvent: FileEvent) => {
+  switch (fileEvent) {
+    case "any":
+      return "any";
+    case "access":
+      return "accessed";
+    case "create":
+      return "created";
+    case "modify":
+      return "modified";
+    case "remove":
+      return "removed";
+    default:
+      return fileEvent;
+  }
+};
 
 /** A file that was changed, created or removed */
 export interface FileChange {
@@ -21,9 +39,9 @@ export interface WatchOptions {
   /** The file extensions that it will scan for */
   exts?: string[];
   /** The globs that it will scan for */
-  match?: string[];
+  match?: (string | RegExp)[];
   /** The globs that it will not scan for */
-  skip?: string[];
+  skip?: (string | RegExp)[];
 }
 
 /**
@@ -31,7 +49,7 @@ export interface WatchOptions {
  * each time one or more changes are detected. It is debounced by `interval`.
  * `recursive`, `exts`, `match` and `skip` are filtering the files wich will yield a change
  */
-export default class Watcher implements AsyncIterable<FileChange[]> {
+export class Watcher implements AsyncIterable<FileChange[]> {
   // private events: AsyncIterableIterator<Deno.FsEvent>;
   private signal = deferred();
   private changes: { [key: string]: FileEvent } = {};
@@ -56,12 +74,28 @@ export default class Watcher implements AsyncIterable<FileChange[]> {
     this.interval = interval;
     this.exts = exts?.map((e) => (e.startsWith(".") ? e : `.${e}`));
     this.match = match?.map((s) =>
-      path.globToRegExp(s, { extended: true, globstar: false })
+      typeof s === "object"
+        ? s
+        : path.globToRegExp(s, { extended: true, globstar: false })
     );
     this.skip = skip?.map((s) =>
-      path.globToRegExp(s, { extended: true, globstar: false })
+      typeof s === "object"
+        ? s
+        : path.globToRegExp(s, { extended: true, globstar: false })
     );
     this.recursive = recursive ?? true;
+
+    debug(
+      {
+        paths: this.paths,
+        interval: this.interval,
+        extensions: this.exts,
+        match: this.match,
+        skip: this.skip,
+        recursive: this.recursive,
+      },
+      "Watcher options"
+    );
   }
 
   reset() {
