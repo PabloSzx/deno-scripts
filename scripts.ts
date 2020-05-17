@@ -10,15 +10,12 @@ Scripts(
     },
     test: {
       run: "deno test -A",
-      watch: {
-        skip: ["*testWatchFile.ts"],
-      },
+      watch: true,
     },
     watch: {
       file: "./file-to-watch.ts",
       watch: {
-        paths: ["./"],
-        skip: ["*testWatchFile.ts"],
+        match: [/.*file-to-watch\.ts$/],
       },
     },
     echo1: {
@@ -48,5 +45,9 @@ Scripts(
     },
     fmt: true,
     colors: true,
+    watch: {
+      extensions: [".ts"],
+      skip: ["*testWatchFile.ts"],
+    },
   },
 );

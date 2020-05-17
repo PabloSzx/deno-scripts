@@ -28,118 +28,118 @@ const getNewRandomString = (n: number) => {
 };
 
 Deno.test("watch run script", async () => {
-  let randomString = getNewRandomString(7);
+  try {
+    let randomString = getNewRandomString(7);
 
-  await Deno.writeTextFile(
-    FileToWatchLocation,
-    `
-        console.log("log="+${randomString});
-        `.trim() + "\n",
-  );
+    await Deno.writeTextFile(
+      FileToWatchLocation,
+      `console.log("log="+${randomString});\n`,
+    );
 
-  const runProcess = Deno.run({
-    cwd: dirname,
-    cmd: ["deno", "run", "-A", CLIFileLocation, "watchRun"],
-    stdin: "null",
-    stderr: "null",
-    stdout: "piped",
-  });
+    const runProcess = Deno.run({
+      cwd: dirname,
+      cmd: ["deno", "run", "-A", CLIFileLocation, "watchRun"],
+      stdin: "null",
+      stderr: "null",
+      stdout: "piped",
+    });
 
-  await delay(2000);
+    await delay(2000);
 
-  const enc = new TextDecoder();
+    const enc = new TextDecoder();
 
-  let buff = new Uint8Array(200);
+    let buff = new Uint8Array(200);
 
-  await runProcess.stdout!.read(buff);
+    await runProcess.stdout!.read(buff);
 
-  let processOutput = enc.decode(buff).trim();
+    let processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
+    assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
 
-  assertStrContains(processOutput, "Waiting for changes...");
+    assertStrContains(processOutput, "Waiting for changes...");
 
-  randomString = getNewRandomString(8);
+    randomString = getNewRandomString(8);
 
-  await Deno.writeTextFile(
-    FileToWatchLocation,
-    `
-        console.log("log="+${randomString});
-        `.trim(),
-  );
+    await Deno.writeTextFile(
+      FileToWatchLocation,
+      `console.log("log="+${randomString});\n`,
+    );
 
-  await delay(2000);
+    await delay(2000);
 
-  buff = new Uint8Array(200);
+    buff = new Uint8Array(200);
 
-  await runProcess.stdout!.read(buff);
+    await runProcess.stdout!.read(buff);
 
-  runProcess.stdout!.close();
+    runProcess.stdout!.close();
 
-  runProcess.close();
+    runProcess.close();
 
-  processOutput = enc.decode(buff).trim();
+    processOutput = enc.decode(buff).trim();
 
-  assertStrContains(
-    processOutput.toString(),
-    "log=" + randomString.replace(/`/g, ""),
-  );
+    assertStrContains(
+      processOutput.toString(),
+      "log=" + randomString.replace(/`/g, ""),
+    );
 
-  assertStrContains(processOutput, "Waiting for changes...");
+    assertStrContains(processOutput, "Waiting for changes...");
+  } finally {
+    await Deno.remove(FileToWatchLocation);
+  }
 });
 
 Deno.test("watch file script", async () => {
-  let randomString = getNewRandomString(5);
+  try {
+    let randomString = getNewRandomString(5);
 
-  await Deno.writeTextFile(
-    FileToWatchLocation,
-    `
-      console.log("log="+${randomString});
-      `.trim() + "\n",
-  );
+    await Deno.writeTextFile(
+      FileToWatchLocation,
+      `console.log("log="+${randomString});\n`,
+    );
 
-  const runProcess = Deno.run({
-    cwd: dirname,
-    cmd: ["deno", "run", "-A", CLIFileLocation, "watchFile"],
-    stdin: "null",
-    stderr: "null",
-    stdout: "piped",
-  });
+    const runProcess = Deno.run({
+      cwd: dirname,
+      cmd: ["deno", "run", "-A", CLIFileLocation, "watchFile"],
+      stdin: "null",
+      stderr: "null",
+      stdout: "piped",
+    });
 
-  await delay(2000);
+    await delay(2000);
 
-  const enc = new TextDecoder();
+    const enc = new TextDecoder();
 
-  let buff = new Uint8Array(200);
-  await runProcess.stdout!.read(buff);
+    let buff = new Uint8Array(200);
+    await runProcess.stdout!.read(buff);
 
-  let processOutput = enc.decode(buff).trim();
+    let processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
+    assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
 
-  assertStrContains(processOutput, "Waiting for changes...");
+    assertStrContains(processOutput, "Waiting for changes...");
 
-  randomString = getNewRandomString(6);
+    randomString = getNewRandomString(6);
 
-  await Deno.writeTextFile(
-    FileToWatchLocation,
-    `
-      console.log("log="+${randomString});
-      `.trim(),
-  );
+    await Deno.writeTextFile(
+      FileToWatchLocation,
+      `console.log("log="+${randomString});\n`,
+    );
 
-  await delay(2000);
+    await delay(2000);
 
-  buff = new Uint8Array(200);
-  await runProcess.stdout!.read(buff);
+    buff = new Uint8Array(200);
+    await runProcess.stdout!.read(buff);
 
-  runProcess.stdout!.close();
+    runProcess.stdout!.close();
 
-  runProcess.close();
+    runProcess.close();
 
-  processOutput = enc.decode(buff).trim();
+    processOutput = enc.decode(buff).trim();
 
-  assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
+    assertStrContains(processOutput, "log=" + randomString.replace(/`/g, ""));
 
-  assertStrContains(processOutput, "Waiting for changes...");
+    assertStrContains(processOutput, "Waiting for changes...");
+  } finally {
+    await Deno.remove(FileToWatchLocation);
+  }
 });

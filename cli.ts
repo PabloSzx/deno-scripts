@@ -14,27 +14,58 @@ if (import.meta.main) {
           "./scripts.ts",
           `import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
 
-          Scripts({
-            test: {
-              run: "deno test -A",
-              watch: true,
+          Scripts(
+            {
+              // ds test
+              test: {
+                run: "deno test -A",
+                // Enable watch mode
+                watch: true,
+                // Add environment variables
+                env: {
+                  DENO_ENV: "test",
+                },
+              },
+              // ds dev
+              dev: {
+                file: "./mod.ts",
+                // Enable watch mode
+                watch: true,
+                // Add environment variables
+                env: {
+                  DENO_ENV: "development",
+                },
+              },
+              // ds start
+              start: {
+                file: "./mod.ts",
+                // Add environment variables
+                env: {
+                  DENO_ENV: "production",
+                },
+              },
             },
-            dev: {
-              file: "./mod.ts",
-              watch: true,
-            },
-            start: {
-              file: "./mod.ts",
-            },
-          });`,
+            {
+              // Shared default watch options
+              watch: {
+                // Only watch for files with extension ".ts"
+                extensions: ["ts"],
+              },
+              // Default permissions added to
+              // every "file script.
+              permissions: {
+                allowNet: true,
+              },
+            }
+          );`,
         );
 
         await Deno.run({
-          cmd: ["deno", "cache", "./scripts.ts"],
+          cmd: ["deno", "fmt", "-q", "./scripts.ts"],
         }).status();
 
         await Deno.run({
-          cmd: ["deno", "fmt", "-q", "./scripts.ts"],
+          cmd: ["deno", "cache", "./scripts.ts"],
         }).status();
 
         log("\nscripts.ts file created.");

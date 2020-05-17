@@ -123,6 +123,17 @@ export interface GlobalConfig<ConfigKeys> extends CommonDenoConfig {
    * Execute `deno fmt` automatically
    */
   fmt?: boolean | string | string[];
+  /**
+   * Default watch options
+   */
+  watch?: WatchOptions;
+
+  /**
+   * Permissions management
+   *
+   * These permissions are added to every `file` script
+   */
+  permissions?: Permissions;
 }
 
 export interface ScriptFile extends CommonDenoConfig {
@@ -141,7 +152,7 @@ export interface ScriptRun extends CommonArgs {
   run: string | string[];
 }
 
-type ScriptConcurrent<T> = {
+export type ScriptConcurrent<T> = {
   /**
    * Previously defined scripts to be executed
    */
@@ -310,7 +321,7 @@ export async function Scripts<
     ) {
       defaultCommonArgs(script, globalConfig);
 
-      const scriptNameColor = colors.black(colors.bgWhite(scriptName));
+      const scriptNameColor = colors.black(colors.bgWhite(`[${scriptName}]`));
 
       const waitingForChangesLog = () => {
         log(`${scriptNameColor} Waiting for changes...`);
@@ -346,7 +357,7 @@ export async function Scripts<
         globalPermissions.allowEnv = true;
       }
 
-      const watchModeEnabled = Boolean(script.watch ?? globalConfig.watch);
+      const watchModeEnabled = Boolean(script.watch);
       if (watchModeEnabled) {
         log(`Watch mode enabled for ${scriptNameColor}.`);
       }

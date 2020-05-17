@@ -19,7 +19,9 @@ export function log(text: string) {
 }
 
 export function warn(text: string) {
-  console.warn(`${prefix()} ${colors.bgYellow(text)}`);
+  if (text !== "Bad resource ID") {
+    console.warn(`${prefix()} ${colors.bgYellow(text)}`);
+  }
 }
 
 let regex101Reminded = false;
@@ -38,7 +40,7 @@ RegExp.prototype.toJSON = function () {
     );
   }
 
-  return this.toString();
+  return this.toString().replace(/\\\\/g, "\\");
 };
 
 export function debug(data: unknown, title?: string, name?: string) {
@@ -50,7 +52,7 @@ export function debug(data: unknown, title?: string, name?: string) {
         colors.yellow(
           `${
             typeof data === "object"
-              ? "\n" + JSON.stringify(data, null, 2).replace(/\\\\/g, "\\")
+              ? "\n" + JSON.stringify(data, null, 2)
               : (data as string)
           }`,
         ),

@@ -12,10 +12,11 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
 
 ## Features
 
-- [x] Type-safety
+- [x] Type-safety and auto-completion
 - [x] Permissions management
 - [x] Environment variables support (from `.env` or from _config_)
-- [ ] [denon](https://github.com/eliassjogreen/denon) support (coming soon)
+- [x] Watching for files changes support
+- [x] Concurrent script execution (`parallel` or `sequential`) support
 
 ## Usage
 
@@ -32,19 +33,50 @@ It will generate a `scripts.ts` file like so
 ```ts
 import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
 
-Scripts({
-  test: {
-    run: "deno test -A",
-    watch: true,
+Scripts(
+  {
+    // ds test
+    test: {
+      run: "deno test -A",
+      // Enable watch mode
+      watch: true,
+      // Add environment variables
+      env: {
+        DENO_ENV: "test",
+      },
+    },
+    // ds dev
+    dev: {
+      file: "./mod.ts",
+      // Enable watch mode
+      watch: true,
+      // Add environment variables
+      env: {
+        DENO_ENV: "development",
+      },
+    },
+    // ds start
+    start: {
+      file: "./mod.ts",
+      // Add environment variables
+      env: {
+        DENO_ENV: "production",
+      },
+    },
   },
-  dev: {
-    file: "./mod.ts",
-    watch: true,
-  },
-  start: {
-    file: "./mod.ts",
-  },
-});
+  {
+    // Shared default watch options
+    watch: {
+      // Only watch for files with extension ".ts"
+      extensions: ["ts"],
+    },
+    // Default permissions added to
+    // every "file script.
+    permissions: {
+      allowNet: true,
+    },
+  }
+);
 ```
 
 As you could see, there are two different type of scripts, one is `file`, and the other is `run`.
@@ -52,11 +84,11 @@ As you could see, there are two different type of scripts, one is `file`, and th
 Then you can simply use it
 
 ```sh
-ds foo
+ds test
 ## or
-ds bar
+ds dev
 ## or you can simply call it using deno itself
-deno run -A scripts.ts foo
+deno run -A scripts.ts start
 ```
 
 ### File script configuration
@@ -74,26 +106,6 @@ interface ScriptFile {
    */
   file: string;
   /**
-   * Load environment variables from a file
-   *
-   * If it's `true` it will look for ".env"
-   *
-   * By default it's set to `true` if a `.env` exists.
-   */
-  envFile?: boolean | string;
-  /**
-   * Add environment variables
-   */
-  env?: Record<string, string | number | boolean>;
-  /**
-   * Arguments to be added to the script
-   */
-  args?: string | string[];
-  /**
-   * Deno args to be added
-   */
-  denoArgs?: string | string[];
-  /**
    * Permissions management
    */
   permissions?: {
@@ -110,6 +122,30 @@ interface ScriptFile {
    * tsconfig location
    */
   tsconfig?: string;
+  /**
+   * Deno args to be added
+   */
+  denoArgs?: string | string[];
+  /**
+   * Load environment variables from a file
+   *
+   * If it's `true` it will look for ".env"
+   *
+   * By default it's set to `true` if a `.env` exists.
+   */
+  envFile?: boolean | string;
+  /**
+   * Add environment variables
+   */
+  env?: Record<string, string | number | boolean>;
+  /**
+   * Arguments to be added after the script
+   */
+  args?: string | string[];
+  /**
+   * Enable watch and/or specify options
+   */
+  watch?: boolean | WatchOptions;
 }
 ```
 
@@ -143,6 +179,10 @@ interface ScriptRun {
    * Arguments to be added after the script
    */
   args?: string | string[];
+  /**
+   * Enable watch and/or specify options
+   */
+  watch?: boolean | WatchOptions;
 }
 ```
 
@@ -173,23 +213,47 @@ Scripts(
 );
 ```
 
-You can specify the config as it follows
+You can specify the global config as it follows
 
 ```ts
 interface GlobalConfig {
   /**
-   * Permissions management
+   * If `debug` is enabled, it will print some helpful
+   * information showing what is going on.
    */
-  permissions?: {
-    allowAll?: boolean;
-    allowEnv?: boolean;
-    allowHRTime?: boolean;
-    allowNet?: boolean | string;
-    allowPlugin?: boolean;
-    allowRead?: boolean | string;
-    allowRun?: boolean;
-    allowWrite?: boolean | string;
-  };
+  debug?: boolean;
+  /**
+   * Import map path
+   */
+  importMap?: string;
+  /**
+   * Enable unstable features
+   */
+  unstable?: boolean;
+  /**
+   * Concurrent scripts
+   */
+  concurrentScripts?: Record<string, ScriptConcurrent<ConfigKeys>>;
+  /**
+   * Enable colors in CLI
+   *
+   * `true` by default.
+   */
+  colors?: boolean;
+  /**
+   * Execute `deno fmt` automatically
+   */
+  fmt?: boolean | string | string[];
+  /**
+   * Default watch options
+   */
+  watch?: WatchOptions;
+  /**
+   * Permissions management
+   *
+   * These permissions are added to every `file` script
+   */
+  permissions?: Permissions;
   /**
    * tsconfig location
    */
@@ -215,17 +279,51 @@ interface GlobalConfig {
    */
   args?: string | string[];
   /**
-   * If `debug` is enabled, it will print the command
-   * that is going to be executed.
+   * Enable watch and/or specify options
    */
-  debug?: boolean;
-  /**
-   * Import map path
-   */
-  importMap?: string;
-  /**
-   * Enable unstable features
-   */
-  unstable?: boolean;
+  watch?: boolean | WatchOptions;
 }
+```
+
+### Concurrent script
+
+To execute scripts concurrently you have to specify an extra `concurrentScripts` field in your global configuration.
+
+```ts
+Scripts(
+  {
+    hello: {
+      run: "echo hello",
+    },
+    world: {
+      run: "echo world",
+    },
+  },
+  {
+    concurrentScripts: {
+      helloWorldParallel: {
+        // Specify the scripts you previously defined
+        scripts: ["hello", "world"],
+        // By default it's set to `parallel`
+        mode: "parallel",
+      },
+      helloWorldSequential: {
+        // Specify the scripts you previously defined
+        scripts: ["hello", "world"],
+        // If `sequential`, it will wait in the
+        // specified order to run the next script
+        mode: "sequential",
+      },
+    },
+  }
+);
+```
+
+Then you can just call them like any other script:
+
+> **Keep in mind that watch mode still can be used simultaneously**, but in `sequential mode` it would only make sense to be the **last script** specified for it to be enabled.
+
+```sh
+ds helloWorldParallel
+ds helloWorldSequential
 ```

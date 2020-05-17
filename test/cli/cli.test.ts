@@ -74,29 +74,31 @@ Deno.test("cli wrong script", async () => {
 
 Deno.test("cli init scripts.ts", async () => {
   const tempFolderLocation = await Deno.makeTempDir();
-  const scriptsTsLocation = path.resolve(tempFolderLocation, "./scripts.ts");
+  try {
+    const scriptsTsLocation = path.resolve(tempFolderLocation, "./scripts.ts");
 
-  await Deno.mkdir(tempFolderLocation, {
-    recursive: true,
-  });
+    await Deno.mkdir(tempFolderLocation, {
+      recursive: true,
+    });
 
-  if (await exists(scriptsTsLocation)) {
-    await Deno.remove(scriptsTsLocation);
+    if (await exists(scriptsTsLocation)) {
+      await Deno.remove(scriptsTsLocation);
+    }
+
+    const initProcess = Deno.run({
+      cwd: tempFolderLocation,
+      cmd: ["deno", "run", "-A", CLIFileLocation, "init"],
+      stdin: "null",
+      stderr: "null",
+      stdout: "null",
+    });
+
+    await initProcess.status();
+
+    initProcess.close();
+
+    assertStrictEq(await exists(scriptsTsLocation), true);
+  } finally {
+    await Deno.remove(tempFolderLocation, { recursive: true });
   }
-
-  const initProcess = Deno.run({
-    cwd: tempFolderLocation,
-    cmd: ["deno", "run", "-A", CLIFileLocation, "init"],
-    stdin: "null",
-    stderr: "null",
-    stdout: "null",
-  });
-
-  await initProcess.status();
-
-  initProcess.close();
-
-  assertStrictEq(await exists(scriptsTsLocation), true);
-
-  await Deno.remove(tempFolderLocation, { recursive: true });
 });
