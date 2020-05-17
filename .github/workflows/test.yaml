@@ -19,4 +19,4 @@ jobs:
           deno-version: ${{ matrix.deno }}
 
       - name: Run tests
-        run: deno run -A scripts.ts test
+        run: deno run -A scripts.ts testGitHub

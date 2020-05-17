@@ -2,10 +2,13 @@ import { Scripts } from "./mod.ts";
 
 Scripts(
   {
-    test: {
+    testGitHub: {
       run: "deno test -A",
+      env: {
+        GITHUB: 1,
+      },
     },
-    testWatch: {
+    test: {
       run: "deno test -A",
       watch: {
         skip: ["*testWatchFile.ts"],
