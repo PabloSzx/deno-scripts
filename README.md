@@ -277,12 +277,16 @@ Scripts(
     },
   },
   {
+    // Enable Debug mode
+    debug: true,
+    // Enable automatic fmt
+    fmt: true,
+    // Permissions added to every file script,
     permissions: {
       allowRead: true,
     },
     tsconfig: "./tsconfig.json",
-    preArgs: "",
-    postArgs: "",
+    // Check the types for more configuration
   }
 );
 ```
@@ -352,13 +356,22 @@ interface GlobalConfig {
    *
    * These permissions are added to every `file` script
    */
-  permissions?: Permissions;
+  permissions?: {
+    allowAll?: boolean;
+    allowEnv?: boolean;
+    allowHRTime?: boolean;
+    allowNet?: boolean | string;
+    allowPlugin?: boolean;
+    allowRead?: boolean | string;
+    allowRun?: boolean;
+    allowWrite?: boolean | string;
+  };
   /**
    * tsconfig location
    */
   tsconfig?: string;
   /**
-   * Deno args to be added
+   * Deno args to be added to every file script
    */
   denoArgs?: string | string[];
   /**
@@ -377,37 +390,6 @@ interface GlobalConfig {
    * Arguments to be added after the script
    */
   args?: string | string[];
-  /**
-   * Enable watch and/or specify options
-   */
-  watch?:
-    | boolean
-    | {
-        /**
-         * Paths to add while watching
-         */
-        paths?: string[];
-        /**
-         * Watch for the specified Glob
-         */
-        match?: (string | RegExp)[];
-        /**
-         * Skip the specified paths or files
-         */
-        skip?: (string | RegExp)[];
-        /**
-         * Specify extensions to be watched
-         */
-        extensions?: string[];
-        /**
-         * Interval used while watching files
-         */
-        interval?: number;
-        /**
-         * Recursively watch all files of the paths
-         */
-        recursive?: boolean;
-      };
 }
 ```
 
