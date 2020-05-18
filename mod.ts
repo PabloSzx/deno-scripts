@@ -125,6 +125,9 @@ export interface GlobalConfig<ConfigKeys> extends CommonDenoConfig {
   fmt?: boolean | string | string[];
   /**
    * Default watch options
+   *
+   * This configuration **DOES NOT** enables watch mode,
+   * it just adds these options to every watch enabled script.
    */
   watch?: WatchOptions;
 
