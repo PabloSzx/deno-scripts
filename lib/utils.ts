@@ -25,3 +25,15 @@ export const delay = (ms: number) =>
       resolve();
     }, ms);
   });
+
+export const getShellArgs = (
+  shell: string = isWindows ? "cmd.exe" : "sh -c",
+) => {
+  if (isWindows) {
+    if (/^(?:.*\\)?cmd(?:\.exe)?$/.test(shell)) {
+      return [shell, "/d", "/s", "/c"];
+    }
+  }
+
+  return shell.split(" ");
+};

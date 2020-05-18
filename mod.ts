@@ -10,6 +10,7 @@ import { argifyPermissions } from "./lib/permissions.ts";
 import {
   defaultEmptyArray,
   defaultEmptyObject,
+  getShellArgs,
   toArgsStringList,
 } from "./lib/utils.ts";
 import { debug, fail, log, setDebugMode, warn } from "./log.ts";
@@ -130,13 +131,18 @@ export interface GlobalConfig<ConfigKeys> extends CommonDenoConfig {
    * it just adds these options to every watch enabled script.
    */
   watch?: WatchOptions;
-
   /**
    * Permissions management
    *
    * These permissions are added to every `file` script
    */
   permissions?: Permissions;
+  /**
+   * Specify shell to use for `run` scripts.
+   *
+   * By default `cmd.exe` for **Windows**, and `sh -c` for **Linux** & **macOS**.
+   */
+  shell?: string;
 }
 
 export interface ScriptFile extends CommonDenoConfig {
@@ -152,7 +158,7 @@ export interface ScriptRun extends CommonArgs {
   /**
    * Command to be executed
    */
-  run: string | string[];
+  run: string;
 }
 
 export type ScriptConcurrent<T> = {
@@ -270,7 +276,7 @@ export async function Scripts<
       await autoFmt(globalConfig.fmt);
 
       if (concurrentScript.mode === "parallel") {
-        const scriptResult = await Promise.all(
+        const scriptResult = await Promise.allSettled(
           scripts.map(async ({ script, scriptName }) => {
             return await (
               await execScript(script, scriptName as string)
@@ -278,27 +284,47 @@ export async function Scripts<
           }),
         );
 
-        if (scriptResult.every((result) => result?.success)) {
+        if (
+          scriptResult.every((result, index) => {
+            if (
+              result.status === "fulfilled" &&
+              result.value &&
+              result.value.success
+            ) {
+              return true;
+            }
+            fail(
+              `Script ${scripts[index].scriptName} failed${
+                result.status === "fulfilled" && result.value
+                  ? ` with code ${result.value.code}`
+                  : ""
+              }.`,
+            );
+            return false;
+          })
+        ) {
           Deno.exit(0);
         } else {
           Deno.exit(1);
         }
-      } else {
-        for await (
-          const scriptResult of scripts.map(
-            async ({ script, scriptName }) => {
-              return await (
-                await execScript(script, scriptName as string)
-              )?.status();
-            },
-          )
-        ) {
-          if (!scriptResult?.success) {
-            Deno.exit(scriptResult?.code);
+      } else if (concurrentScript.mode === "sequential") {
+        for (const { script, scriptName } of scripts) {
+          const status = await (
+            await execScript(script, scriptName as string)
+          )?.status();
+
+          if (!status?.success) {
+            fail(
+              `Script ${scriptName} failed${
+                status?.code != null ? ` with code ${status.code}` : ""
+              }.`,
+            );
           }
         }
 
         Deno.exit(0);
+      } else {
+        Deno.exit(1);
       }
     } else {
       const scriptConfig = localConfig[scriptArg] as
@@ -478,9 +504,12 @@ export async function Scripts<
         }
       } else if (script.run) {
         const cmd = [
-          ...toArgsStringList(script.run),
-          ...argifyArgs(script.args, globalConfig.args),
-          ...restArg,
+          ...getShellArgs(globalConfig.shell),
+          `${script.run} ${
+            argifyArgs(script.args, globalConfig.args).join(
+              " ",
+            )
+          } ${restArg.join(" ")}`.trim(),
         ];
         if (globalConfig.debug) {
           debug(

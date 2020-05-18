@@ -25,7 +25,10 @@ Scripts(
       run: "echo 2",
     },
     echo3: {
-      run: "echo 3",
+      run: "sleep 5s && echo 1 && sleep 3s && echo 3",
+    },
+    exit: {
+      run: "sleep 2s && (exit 1)",
     },
   },
   {
@@ -39,8 +42,11 @@ Scripts(
         mode: "parallel",
       },
       sequential: {
-        scripts: ["echo3", "echo1", "echo2"],
+        scripts: ["echo3", "exit", "echo3", "echo3"],
         mode: "sequential",
+      },
+      sequentialFail: {
+        scripts: ["echo1", "exit", "echo2"],
       },
     },
     fmt: true,

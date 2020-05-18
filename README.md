@@ -209,7 +209,7 @@ interface ScriptRun {
   /**
    * Command to be executed
    */
-  run: string | string[];
+  run: string;
   /**
    * Load environment variables from a file
    *
