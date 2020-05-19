@@ -97,7 +97,7 @@ Any command not specified here will run the scripts specified in your ${scriptsT
             extensions: ["ts"],
           },
           // Default permissions added to
-          // every "file script.
+          // every "file script".
           permissions: {
             allowNet: true,
           },

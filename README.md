@@ -40,6 +40,8 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
 
 ## Usage
 
+![CLI Screenshot](/static/cli_1.png)
+
 First, you should init the configuration file, you can simply execute
 
 > In the root of your project
@@ -48,7 +50,9 @@ First, you should init the configuration file, you can simply execute
 ds init
 ```
 
-It will generate a `scripts.ts` file like so
+![CLI Init Screenshot](/static/cli_init_help.png)
+
+It will generate a `scripts.ts` file like this:
 
 ```ts
 import { Scripts } from "https://deno.land/x/deno_scripts/mod.ts";
@@ -91,10 +95,12 @@ Scripts(
       extensions: ["ts"],
     },
     // Default permissions added to
-    // every "file script.
+    // every "file script".
     permissions: {
       allowNet: true,
     },
+    // Automatic `deno fmt` call
+    fmt: true,
   }
 );
 ```
@@ -109,6 +115,7 @@ ds test
 ds dev
 ## or you can simply call it using deno itself
 deno run -A scripts.ts start
+## Every argument after the script name is going to be added as an argument to the end of the script itself
 ```
 
 ### File script configuration
@@ -116,8 +123,6 @@ deno run -A scripts.ts start
 It will run the specified file as `deno run ...`
 
 You can specify the configuration as it follows:
-
-> | **Remember** | The **local** configuration will always have a priority over **global** configuration
 
 ```ts
 interface ScriptFile {
@@ -201,8 +206,6 @@ interface ScriptFile {
 It will run the specified command **as it is**.
 
 You can specify the configuration as it follows:
-
-> | **Remember** | The **local** configuration will always have a priority over **global** configuration
 
 ```ts
 interface ScriptRun {
@@ -386,13 +389,19 @@ interface GlobalConfig {
    */
   envFile?: boolean | string;
   /**
-   * Add environment variables
+   * Add environment variables to every script
    */
   env?: Record<string, string | number | boolean>;
   /**
-   * Arguments to be added after the script
+   * Arguments to be added after every script
    */
   args?: string | string[];
+  /**
+   * Specify shell to use for `run` scripts.
+   *
+   * By default `cmd.exe` for Windows, and `sh -c` for Linux & macOS.
+   */
+  shell?: string;
 }
 ```
 
@@ -444,3 +453,10 @@ ds helloWorldSequential
 This project is aimed to be a improved `package.json` scripts, but adding a lot a features commonly added by third party libraries.
 
 If you have an idea of a feature, the Issues and Pull Requests are open.
+
+## Credits
+
+Special thanks to:
+
+- [Denomander](https://github.com/siokas/denomander) for some **CLI** functionality.
+- [denon](https://github.com/eliassjogreen/denon) for the **watching** functionality.
