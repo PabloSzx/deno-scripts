@@ -13,7 +13,7 @@ Scripts(
       watch: true,
     },
     watch: {
-      file: "./file-to-watch.ts",
+      file: "./example/file-to-watch.ts",
       watch: {
         match: [/.*file-to-watch\.ts$/],
       },

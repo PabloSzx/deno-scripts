@@ -1,6 +1,6 @@
 // Credits to https://github.com/eliassjogreen/denon
 
-import { path, deferred } from "./deps.ts";
+import { path, deferred } from "../deps.ts";
 import { debug } from "./log.ts";
 
 type FileEvent = "any" | "access" | "create" | "modify" | "remove";
