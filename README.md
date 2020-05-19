@@ -26,6 +26,7 @@ deno install -f -n ds --allow-run --allow-read --allow-write https://deno.land/x
   - [Global configuration](#global-configuration)
   - [Concurrent scripts](#concurrent-scripts)
 - [Contributing](#contributing)
+- [Credits](#credits)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
