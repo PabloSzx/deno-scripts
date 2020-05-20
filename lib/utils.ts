@@ -1,5 +1,5 @@
 export const defaultEmptyObject = Object.freeze({}) as {};
-export const defaultEmptyArray: any[] = Object.freeze([]) as [];
+export const defaultEmptyArray = Object.freeze([]) as [];
 
 export function toArgsStringList(
   args: string | string[] | undefined,

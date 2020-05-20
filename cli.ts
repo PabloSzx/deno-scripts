@@ -127,5 +127,5 @@ Any command not specified here will run the scripts specified in your ${scriptsT
     }
   }
 } else {
-  warn("deno_scripts CLI should be called from shell!");
+  warn("CLI should be called from shell!");
 }

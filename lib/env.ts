@@ -1,5 +1,5 @@
 // Credits to https://github.com/crowlKats/denv/blob/master/mod.ts
-function parse(string: string): Record<string, string> {
+function parseEnvFile(string: string): Record<string, string> {
   const lines = string
     .split(/\n|\r|\r\n/)
     .filter((line) => (line.startsWith("#") ? false : !!line));
@@ -15,7 +15,7 @@ function parse(string: string): Record<string, string> {
         val = val.trim();
       }
 
-      return [key, val];
+      return [key.trim(), val];
     }),
   );
 }
@@ -25,10 +25,10 @@ function parse(string: string): Record<string, string> {
  */
 export async function loadEnvFromFile(
   path: string,
-): Promise<ReturnType<typeof parse>> {
+): Promise<ReturnType<typeof parseEnvFile>> {
   const file = await Deno.readFile(path);
   const decoder = new TextDecoder();
-  return parse(decoder.decode(file));
+  return parseEnvFile(decoder.decode(file));
 }
 
 /**

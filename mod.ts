@@ -1,3 +1,6 @@
+import Kia from "https://denopkg.com/PabloSzx/kia";
+import { Spinners } from "https://denopkg.com/PabloSzx/kia/spinners.ts";
+
 import { colors, exists, existsSync } from "./deps.ts";
 import {
   argifyArgs,
@@ -6,6 +9,7 @@ import {
   argifyUnstable,
 } from "./lib/args.ts";
 import { loadEnvFromFile, loadEnvFromObject } from "./lib/env.ts";
+import { debug, fail, log, prefix, setDebugMode, warn } from "./lib/log.ts";
 import { argifyPermissions } from "./lib/permissions.ts";
 import {
   defaultEmptyArray,
@@ -13,7 +17,6 @@ import {
   getShellArgs,
   toArgsStringList,
 } from "./lib/utils.ts";
-import { debug, fail, log, setDebugMode, warn } from "./lib/log.ts";
 import { fileEventToPast, Watcher } from "./lib/watcher.ts";
 
 export interface Permissions {
@@ -174,10 +177,7 @@ export type ScriptConcurrent<T> = {
   mode?: "sequential" | "parallel";
 };
 
-function defaultCommonArgs<
-  LocalConfig extends CommonArgs,
-  GlobalConfig extends CommonArgs,
->(_local: LocalConfig, global: GlobalConfig) {
+function defaultGlobalConfig(global: GlobalConfig<unknown>) {
   // If envFile is not specified, it will check if a `.env` exists
   // And if it does, it will turn it `true`
   if (global.envFile === undefined) {
@@ -185,6 +185,9 @@ function defaultCommonArgs<
       global.envFile = true;
     }
   }
+
+  // Colors + Spinner functionality is enabled by default
+  global.colors = Boolean(global.colors ?? true);
 }
 
 async function autoFmt(fmtConfig?: boolean | string | string[]) {
@@ -222,9 +225,11 @@ export async function Scripts<
    */
   globalConfig: GlobalConfig<TConfigKeys> = defaultEmptyObject,
 ): Promise<void> {
+  defaultGlobalConfig(globalConfig);
+
   const [scriptArg, ...restArg] = Deno.args;
 
-  colors.setColorEnabled(Boolean(globalConfig.colors ?? true));
+  colors.setColorEnabled(Boolean(globalConfig.colors));
 
   if (!scriptArg) {
     fail("Specify a script to be executed!");
@@ -247,6 +252,7 @@ export async function Scripts<
   }
 
   const concurrentScript = globalConfig.concurrentScripts?.[scriptArg];
+  let parallelScript = false;
 
   if (concurrentScript != null) {
     concurrentScript.mode = concurrentScript.mode || "parallel";
@@ -275,6 +281,7 @@ export async function Scripts<
     await autoFmt(globalConfig.fmt);
 
     if (concurrentScript.mode === "parallel") {
+      parallelScript = true;
       const scriptResult = await Promise.allSettled(
         scripts.map(async ({ script, scriptName }) => {
           return await (
@@ -347,12 +354,21 @@ export async function Scripts<
     script: ScriptFile | ScriptRun,
     scriptName: string,
   ) {
-    defaultCommonArgs(script, globalConfig);
-
     const scriptNameColor = colors.black(colors.bgRgb8(`[${scriptName}]`, 231));
 
-    const waitingForChangesLog = () => {
-      log(`${scriptNameColor} Waiting for changes...`);
+    let spinner: Kia | undefined;
+
+    const waitingForChangesLog = async () => {
+      const text = `${scriptNameColor} Waiting for changes`;
+      if (globalConfig.colors && parallelScript === false) {
+        spinner = new Kia({
+          prefixText: `${prefix()} ${text} `,
+          spinner: Spinners.dots,
+        });
+        await spinner.start();
+      } else {
+        log(text + "...");
+      }
     };
 
     const envFile = script.envFile ?? globalConfig.envFile;
@@ -466,6 +482,8 @@ export async function Scripts<
           });
 
         for await (const changes of watcher) {
+          await spinner?.stop();
+
           await autoFmt(globalConfig.fmt);
 
           log(
@@ -555,6 +573,8 @@ export async function Scripts<
           });
 
         for await (const changes of watcher) {
+          await spinner?.stop();
+
           await autoFmt(globalConfig.fmt);
 
           log(

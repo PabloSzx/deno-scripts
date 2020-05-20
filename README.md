@@ -461,3 +461,5 @@ Special thanks to:
 
 - [Denomander](https://github.com/siokas/denomander) for some **CLI** functionality.
 - [denon](https://github.com/eliassjogreen/denon) for the **watching** functionality.
+- [denv](https://github.com/crowlKats/denv) for the **.env** functionality.
+- [Kia](https://github.com/HarryPeach/kia) for the **_sexy_** spinners.
