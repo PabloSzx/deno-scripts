@@ -7,6 +7,8 @@ Type-safe centralized Deno project scripts 🦕
 [![ci](https://github.com/PabloSzx/deno_scripts/workflows/test/badge.svg)](https://github.com/PabloSzx/deno_scripts/actions)
 [![license](https://img.shields.io/github/license/PabloSzx/deno_scripts)](https://github.com/PabloSzx/deno_scripts/blob/master/LICENSE)
 
+![logo](/static/deno_scripts.png)
+
 ## Install
 
 > You can change `ds` to any name you prefer calling it
@@ -463,3 +465,4 @@ Special thanks to:
 - [denon](https://github.com/eliassjogreen/denon) for the **watching** functionality.
 - [denv](https://github.com/crowlKats/denv) for the **.env** functionality.
 - [Kia](https://github.com/HarryPeach/kia) for the **_sexy_** spinners.
+- [Freepik](https://www.flaticon.com/authors/freepik) for the logo.
