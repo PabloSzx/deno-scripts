@@ -1,4 +1,4 @@
-import { default as Denomander } from "https://denopkg.com/PabloSzx/denomander";
+import { default as Denomander } from "https://denopkg.com/PabloSzx/denomander/mod.ts";
 import * as DenomanderErrors from "https://denopkg.com/PabloSzx/denomander/custom_errors.ts";
 
 import { colors, exists } from "./deps.ts";
