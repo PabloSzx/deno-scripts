@@ -1,5 +1,5 @@
-import Kia from "https://denopkg.com/PabloSzx/kia";
-import { Spinners } from "https://denopkg.com/PabloSzx/kia/spinners.ts";
+import Kia from "https://raw.githubusercontent.com/PabloSzx/kia/master/kia.ts";
+import { Spinners } from "https://raw.githubusercontent.com/PabloSzx/kia/master/spinners.ts";
 
 import { colors, exists, existsSync } from "./deps.ts";
 import {

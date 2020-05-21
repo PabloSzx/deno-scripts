@@ -1,5 +1,5 @@
-import { default as Denomander } from "https://denopkg.com/PabloSzx/denomander/mod.ts";
-import * as DenomanderErrors from "https://denopkg.com/PabloSzx/denomander/custom_errors.ts";
+import { Denomander } from "https://raw.githubusercontent.com/PabloSzx/denomander/master/src/Denomander.ts";
+import * as DenomanderErrors from "https://raw.githubusercontent.com/PabloSzx/denomander/master/custom_errors.ts";
 
 import { colors, exists } from "./deps.ts";
 import { fail, log, prefix, warn } from "./lib/log.ts";
