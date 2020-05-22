@@ -41,7 +41,7 @@ if (Deno.env.get("GITHUB") === undefined) {
         stdout: "piped",
       });
 
-      await delay(2500);
+      await delay(3500);
 
       const enc = new TextDecoder();
 
@@ -102,7 +102,7 @@ if (Deno.env.get("GITHUB") === undefined) {
         stdout: "piped",
       });
 
-      await delay(2000);
+      await delay(4000);
 
       const enc = new TextDecoder();
 
